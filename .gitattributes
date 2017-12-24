@@ -1,0 +1,18 @@
+* text=auto
+*.java          text
+*.properties    text
+*.bat           text eol=crlf
+*.gradle        text
+*.md            text
+
+*.class         binary
+*.dll           binary
+*.ear           binary
+*.gif           binary
+*.ico           binary
+*.jar           binary
+*.jpg           binary
+*.jpeg          binary
+*.png           binary
+*.so            binary
+*.war           binary
