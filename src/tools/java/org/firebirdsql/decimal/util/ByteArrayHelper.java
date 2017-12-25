@@ -65,6 +65,9 @@ public final class ByteArrayHelper {
      * @return byte array
      */
     public static byte[] hexToBytes(String hexString) {
+        if (hexString == null) {
+            return null;
+        }
         int len = hexString.length();
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {

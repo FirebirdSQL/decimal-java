@@ -22,7 +22,6 @@
 package org.firebirdsql.decimal;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
 
 import static org.firebirdsql.decimal.Signum.NEGATIVE;
 
@@ -43,7 +42,7 @@ public final class Decimal64 extends AbstractDecimal<Decimal64> {
     private static final DecimalCodec CODEC = new DecimalCodec(DecimalFormat.Decimal64);
 
     private Decimal64(SimpleDecimal value) {
-        super(DecimalFormat.Decimal64.validate(value));
+        super(value.rescaleAndValidate(DecimalFormat.Decimal64));
     }
 
     @Override
@@ -71,23 +70,13 @@ public final class Decimal64 extends AbstractDecimal<Decimal64> {
     }
 
     /**
-     * Creates a {@code Decimal64} from the provided {@code BigDecimal}, rounding if necessary.
-     *
-     * @param bigDecimal BigDecimal to convert
-     * @return Decimal64 equivalent
-     * @throws IllegalArgumentException if the exponent ({@code -1 * scale}) is out of range
-     * @see #valueOfExact(BigDecimal)
-     */
-    public static Decimal64 valueOf(final BigDecimal bigDecimal) {
-        return valueOfExact(bigDecimal.round(MathContext.DECIMAL64));
-    }
-
-    /**
      * Creates a {@code Decimal64} from the provided {@code BigDecimal}.
      *
-     * @param bigDecimal BigDecimal to convert
+     * @param bigDecimal
+     *         BigDecimal to convert
      * @return Decimal64 equivalent
-     * @throws IllegalArgumentException if the exponent ({@code -1 * scale}) or the coefficient is out of range
+     * @throws DecimalOverflowException
+     *         if the exponent ({@code -1 * scale}) or the coefficient is out of range
      */
     public static Decimal64 valueOfExact(final BigDecimal bigDecimal) {
         return new Decimal64(SimpleDecimal.valueOf(bigDecimal));

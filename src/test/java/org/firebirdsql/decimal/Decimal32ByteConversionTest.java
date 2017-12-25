@@ -32,6 +32,7 @@ import java.util.Collection;
 import static org.firebirdsql.decimal.util.ByteArrayHelper.hexToBytes;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
@@ -50,6 +51,7 @@ public class Decimal32ByteConversionTest {
 
     @Test
     public void testConversionFromBytesToDecimal32() {
+        assumeTrue("No source bytes for " + description, sourceBytes != null);
         Decimal32 result = Decimal32.parseBytes(sourceBytes);
 
         assertEquals("Expected " + description, decimalValue, result);
@@ -57,6 +59,7 @@ public class Decimal32ByteConversionTest {
 
     @Test
     public void testConversionFromDecimal32ToBytes() {
+        assumeTrue("No target bytes for " + description, targetBytes != null);
         byte[] result = decimalValue.toBytes();
 
         assertArrayEquals(targetBytes, result);
@@ -105,10 +108,9 @@ public class Decimal32ByteConversionTest {
                 testCase("77f3fcff", "9.999999E+96"),
                 testCase("47f4d2e7", "1.234567E+96"),
                 // fold-downs (more below)
-                // clamped testcase doesn't work (implementation limit of dec test method; TODO Fix)
-                // TODO testCase("47f4c000", "1.23E+96"),
+                testCase(null, "1.23E+96", "47f4c000"),
                 testCase("47f4c000", "1.230000E+96"),
-                // TODO testCase("47f00000", "1E+96"),
+                testCase(null, "1E+96", "47f00000"),
                 testCase("47f00000", "1.000000E+96"),
                 testCase("225049c5", "12345"),
                 testCase("22500534", "1234"),
@@ -121,20 +123,20 @@ public class Decimal32ByteConversionTest {
                 testCase("00600001", "1E-95"),
                 testCase("04000000", "1.000000E-95"),
                 testCase("04000001", "1.000001E-95"),
-                // TODO include other subnormal cases
+                testCase(null, "0.100000E-95", "00020000"),
                 testCase("00020000", "1.00000E-96"),
+                testCase(null, "0.000010E-95", "00000010"),
                 testCase("00000010", "1.0E-100"),
-                testCase("00000010", "1.0E-100"),
+                testCase(null, "0.000001E-95", "00000001"),
                 testCase("00000001", "1E-101"),
                 // same again, negatives
                 // Nmax and similar
                 testCase("f7f3fcff", "-9.999999E+96"),
                 testCase("c7f4d2e7", "-1.234567E+96"),
                 // fold-downs (more below)
-                // clamped testcase doesn't work (implementation limit of dec test method; TODO Fix)
-                // TODO testCase("c7f4c000", "-1.23E+96"),
+                testCase(null, "-1.23E+96", "c7f4c000"),
                 testCase("c7f4c000", "-1.230000E+96"),
-                // TODO testCase("c7f00000", "-1E+96"),
+                testCase(null, "-1E+96", "c7f00000"),
                 testCase("c7f00000", "-1.000000E+96"),
                 testCase("a25049c5", "-12345"),
                 testCase("a2500534", "-1234"),
@@ -147,12 +149,14 @@ public class Decimal32ByteConversionTest {
                 testCase("80600001", "-1E-95"),
                 testCase("84000000", "-1.000000E-95"),
                 testCase("84000001", "-1.000001E-95"),
-                // TODO include other subnormal cases
+                testCase(null, "-0.100000E-95", "80020000"),
                 testCase("80020000", "-1.00000E-96"),
+                testCase(null, "-0.000010E-95", "80000010"),
                 testCase("80000010", "-1.0E-100"),
+                testCase(null, "-0.000001E-95", "80000001"),
                 testCase("80000001", "-1E-101"),
                 // zeros
-                // TODO skipping some of the clamped cases
+                testCase(null, "0E-400", "00000000"),
                 testCase("00000000", "0E-101"),
                 testCase("00000000", "0.000000E-95"),
                 testCase("22300000", "0.00"),
@@ -160,17 +164,23 @@ public class Decimal32ByteConversionTest {
                 testCase("22800000", "0E+3"),
                 testCase("43f00000", "0E+90"),
                 // clamped zeros...
-                // TODO skipping some of the clamped cases
+                testCase("43f00000", "0E+90"),
+                testCase(null, "0E+96", "43f00000"),
+                testCase(null, "0E+400", "43f00000"),
                 // negative zeros
-                // TODO skipping some of the clamped cases
+                testCase("-0E-400", null, dec("0E-400").negate(), hexToBytes("80000000")),
                 testCase("-0E-101", hexToBytes("80000000"), dec("0E-101").negate()),
+                testCase("-0.000000E-95", null, dec("0.000000E-95").negate(), hexToBytes("80000000")),
+                testCase("-0E-2", hexToBytes("a2300000"), dec("0E-2").negate()),
                 testCase("-0.00", hexToBytes("a2300000"), dec("0.00").negate()),
                 testCase("-0", hexToBytes("a2500000"), dec("0").negate()),
                 testCase("-0E+3", hexToBytes("a2800000"), dec("0E+3").negate()),
                 testCase("-0E+90", hexToBytes("c3f00000"), dec("0E+90").negate()),
                 // clamped zeros...
-                // TODO skipping some of the clamped cases
-                //specials (may have overlap with earlier cases) TODO Some of these will certainly not roundtrip
+                testCase("-0E+91", null, dec("0E+91").negate(), hexToBytes("c3f00000")),
+                testCase("-0E+96", null, dec("0E+96").negate(), hexToBytes("c3f00000")),
+                testCase("-0E+400", null, dec("0E+400").negate(), hexToBytes("c3f00000")),
+                //specials (may have overlap with earlier cases)
                 testCase("Infinity", hexToBytes("78000000"), Decimal32.POSITIVE_INFINITY),
                 testCase("Infinity", hexToBytes("78787878"), Decimal32.POSITIVE_INFINITY, hexToBytes("78000000")),
                 testCase("Infinity", hexToBytes("79797979"), Decimal32.POSITIVE_INFINITY, hexToBytes("78000000")),
@@ -217,7 +227,19 @@ public class Decimal32ByteConversionTest {
                 testCase("-sNaN", hexToBytes("fe03fcff"), Decimal32.NEGATIVE_SIGNALING_NAN, hexToBytes("fe000000")),
                 // diagnostic NaNs skipped, not supported, handled as 'normal' NaNs!
                 // fold-down full sequence
-                // fold-down full sequence skipped (TODO Add?)
+                testCase(null, "1E+96", "47f00000"),
+                testCase("47f00000", "1.000000E+96"),
+                testCase(null, "1E+95", "43f20000"),
+                testCase("43f20000", "1.00000E+95"),
+                testCase(null, "1E+94", "43f04000"),
+                testCase("43f04000", "1.0000E+94"),
+                testCase(null, "1E+93", "43f00400"),
+                testCase("43f00400", "1.000E+93"),
+                testCase(null, "1E+92", "43f00080"),
+                testCase("43f00080", "1.00E+92"),
+                testCase(null, "1.0E+91", "43f00010"),
+                testCase("43f00010", "1.0E+91"),
+                testCase("43f00001", "1E+90"),
                 // Selected DPD codes
                 testCase("22500000", "0"),
                 testCase("22500009", "9"),

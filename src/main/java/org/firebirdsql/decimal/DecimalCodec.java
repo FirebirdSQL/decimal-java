@@ -84,7 +84,7 @@ final class DecimalCodec {
                     == decimalFormat.formatBitLength - 8 - decimalFormat.coefficientContinuationBits
                     : "Unexpected exponent remaining length " + exponentBitsRemaining;
             final int exponent =
-                    decodeExponent(decBytes, exponentMSB, exponentBitsRemaining) - decimalFormat.exponentBias;
+                    decimalFormat.unbiasedExponent(decodeExponent(decBytes, exponentMSB, exponentBitsRemaining));
             BigInteger coefficient = coefficientCoder.decodeValue(signum, firstDigit, decBytes);
 
             //System.out.printf("exponentMSB: %d, exponent %d, firstDigit: %d%n", exponentMSB, exponent, firstDigit);
@@ -118,8 +118,8 @@ final class DecimalCodec {
     }
 
     private void encodeNormal(SimpleDecimal decimal, byte[] decBytes) {
-        final int biasedExponent = decimalFormat.validateExponent(decimal.getExponent()) + decimalFormat.exponentBias;
-        final BigInteger coefficient = decimalFormat.validateCoefficient(decimal.getCoefficient());
+        final int biasedExponent = decimalFormat.biasedExponent(decimal.validateExponent(decimalFormat));
+        final BigInteger coefficient = decimal.validateCoefficient(decimalFormat);
         final int mostSignificantDigit = coefficientCoder.encodeValue(coefficient, decBytes);
         final int expMSB = biasedExponent >>> decimalFormat.exponentContinuationBits;
         final int expTwoBitCont = (biasedExponent >>> decimalFormat.exponentContinuationBits - 2) & 0b011;

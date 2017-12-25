@@ -92,6 +92,170 @@ final class SimpleDecimal {
     }
 
     /**
+     * Rescales and then validates the decimal.
+     * <p>
+     * A rescale may not fit all requirements of the provided decimal format. This method will first rescale and then
+     * validate the simple decimal.
+     * </p>
+     *
+     * @param decimalFormat
+     *         Decimal format
+     * @return An instance of simple decimal that fits the requirements of the decimal format
+     * @throws DecimalOverflowException If the coefficient or exponent is out of range even after (attempted) rescaling
+     */
+    SimpleDecimal rescaleAndValidate(DecimalFormat decimalFormat) {
+        return rescale(decimalFormat)
+                .validate(decimalFormat);
+    }
+
+    /**
+     * Attempts to rescale this simple decimal to fit the requirements of the specified decimal format.
+     * <p>
+     * A decimal format has upper and lower limits for the exponent and coefficient, this method will try to
+     * rescale a number so the exponent fits these upper and lower limits.
+     * </p>
+     * <p>
+     * Rescaling has a number of limitations: reducing the exponent (if the existing exponent is too large) may lead to
+     * a simple decimal that has a coefficient that is too long for the specified decimal format. Increasing
+     * the exponent (if it is too small) will only work in as far there are zeroes as the least significant digit in the
+     * coefficient.
+     * </p>
+     *
+     * @param decimalFormat
+     *         Decimal format
+     * @return A new instance of {@code SimpleDecimal}, which may or may not fit the {@code decimalFormat}.
+     */
+    SimpleDecimal rescale(DecimalFormat decimalFormat) {
+        if (type != DecimalType.NORMAL) {
+            return this;
+        }
+        int biasedExponent = decimalFormat.biasedExponent(exponent);
+        if (biasedExponent < 0) {
+            return increaseExponent(-1 * biasedExponent);
+        } else if (biasedExponent > decimalFormat.eLimit) {
+            return decreaseExponent(biasedExponent - decimalFormat.eLimit);
+        }
+        return this;
+    }
+
+    /**
+     * Decreases the exponent by the requested number of steps.
+     * <p>
+     * The decrease of exponent is achieved by multiplying the coefficient by {@code 10^exponentDecrease}
+     * </p>
+     *
+     * @param exponentDecrease
+     *         Requested decrease of the exponent
+     * @return A simple decimal with decreased exponent
+     */
+    private SimpleDecimal decreaseExponent(int exponentDecrease) {
+        assert exponentDecrease > 0 : "decreaseExponent requires > 0 value";
+        if (coefficient.equals(BigInteger.ZERO)) {
+            return new SimpleDecimal(BigInteger.ZERO, exponent - exponentDecrease);
+        }
+        BigInteger newCoefficient = coefficient.multiply(BigInteger.TEN.pow(exponentDecrease));
+        return new SimpleDecimal(newCoefficient, exponent - exponentDecrease);
+    }
+
+    /**
+     * Attempts to increase the exponent by the requested number of steps.
+     * <p>
+     * The increase of exponent is achieved by chopping of zeroes from the coefficient.
+     * </p>
+     * <p>
+     * This increase can only be achieved if there are sufficient least significant digits with value
+     * zero ({@code '0'}), otherwise either a partially increased value or {@code this} simple decimal may be returned.
+     * </p>
+     *
+     * @param exponentIncrease
+     *         Requested increase of the exponent
+     * @return A simple decimal which may have its exponent increased, this increase may be less than requested.
+     */
+    private SimpleDecimal increaseExponent(int exponentIncrease) {
+        assert exponentIncrease > 0 : "increaseExponent requires > 0 value";
+        if (coefficient.equals(BigInteger.ZERO)) {
+            return new SimpleDecimal(BigInteger.ZERO, exponent + exponentIncrease);
+        }
+        BigInteger newCoefficient = coefficient;
+        int newExponent = exponent;
+        BigInteger[] divAndRemainder = newCoefficient.divideAndRemainder(BigInteger.TEN);
+        while (exponentIncrease-- > 0 && divAndRemainder[1].equals(BigInteger.ZERO)) {
+            newCoefficient = divAndRemainder[0];
+            newExponent++;
+        }
+        if (newCoefficient.equals(coefficient) && newExponent == exponent) {
+            return this;
+        }
+        return new SimpleDecimal(newCoefficient, newExponent);
+    }
+
+    /**
+     * Validates a {@code SimpleDecimal}.
+     *
+     * @param decimalFormat
+     *         Decimal format
+     * @return The {@code simpleDecimal}
+     * @throws DecimalOverflowException
+     *         If the coefficient or exponent are out of range.
+     */
+    final SimpleDecimal validate(DecimalFormat decimalFormat) {
+        if (type == DecimalType.NORMAL) {
+            validateExponent0(decimalFormat);
+            validateCoefficient0(decimalFormat);
+        }
+        return this;
+    }
+
+    /**
+     * Validates and returns the exponent if within range, otherwise throws an {@code DecimalOverflowException}.
+     * <p>
+     * In cases where the exponent is out of range, rescaling may be appropriate, this validation does not take
+     * rescaling into consideration.
+     * </p>
+     *
+     * @param decimalFormat
+     *         Decimal format
+     * @return {@code exponent}
+     * @throws DecimalOverflowException
+     *         If the exponent is out of range.
+     */
+    final int validateExponent(DecimalFormat decimalFormat) {
+        validateExponent0(decimalFormat);
+        return exponent;
+    }
+
+    private void validateExponent0(DecimalFormat decimalFormat) {
+        final int biasedExponent = decimalFormat.biasedExponent(exponent);
+        if (biasedExponent < 0 || biasedExponent > decimalFormat.eLimit) {
+            throw new DecimalOverflowException("Exponent is out of range, exponent: " + exponent);
+        }
+    }
+
+    /**
+     * Validates and returns the coefficient if within range, otherwise throws an {@code IllegalArgumentException}.
+     * <p>
+     * In cases where the coefficient is out of range, rescaling may be appropriate, this validation does not take
+     * rescaling into consideration.
+     * </p>
+     *
+     * @param decimalFormat
+     *         Decimal format
+     * @return {@code coefficient}
+     * @throws DecimalOverflowException
+     *         If the coefficient is out of range.
+     */
+    final BigInteger validateCoefficient(DecimalFormat decimalFormat) {
+        validateCoefficient0(decimalFormat);
+        return coefficient;
+    }
+
+    private void validateCoefficient0(DecimalFormat decimalFormat) {
+        if (decimalFormat.isCoefficientInRange(coefficient)) {
+            throw new DecimalOverflowException("Coefficient is out of range, coefficient: " + coefficient);
+        }
+    }
+
+    /**
      * Converts this decimal to a {@code BigDecimal}.
      *
      * @return Value as BigDecimal

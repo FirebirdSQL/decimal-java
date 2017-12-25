@@ -42,9 +42,7 @@ public class DecimalFormatTest {
         assertEquals("exponentContinuationBits", 6, decimalFormat.exponentContinuationBits);
         assertEquals("coefficientContinuationBits", 20, decimalFormat.coefficientContinuationBits);
         assertEquals("eLimit", 191, decimalFormat.eLimit);
-        assertEquals("eLimit", 96, decimalFormat.eMax);
-        assertEquals("eLimit", -95, decimalFormat.eMin);
-        assertEquals("eLimit", 101, decimalFormat.exponentBias);
+        assertEquals("exponentBias", 101, decimalFormat.biasedExponent(0));
     }
 
     @Test
@@ -56,9 +54,7 @@ public class DecimalFormatTest {
         assertEquals("exponentContinuationBits", 8, decimalFormat.exponentContinuationBits);
         assertEquals("coefficientContinuationBits", 50, decimalFormat.coefficientContinuationBits);
         assertEquals("eLimit", 767, decimalFormat.eLimit);
-        assertEquals("eLimit", 384, decimalFormat.eMax);
-        assertEquals("eLimit", -383, decimalFormat.eMin);
-        assertEquals("eLimit", 398, decimalFormat.exponentBias);
+        assertEquals("exponentBias", 398, decimalFormat.biasedExponent(0));
     }
 
     @Test
@@ -70,9 +66,7 @@ public class DecimalFormatTest {
         assertEquals("exponentContinuationBits", 12, decimalFormat.exponentContinuationBits);
         assertEquals("coefficientContinuationBits", 110, decimalFormat.coefficientContinuationBits);
         assertEquals("eLimit", 12287, decimalFormat.eLimit);
-        assertEquals("eLimit", 6144, decimalFormat.eMax);
-        assertEquals("eLimit", -6143, decimalFormat.eMin);
-        assertEquals("eLimit", 6176, decimalFormat.exponentBias);
+        assertEquals("exponentBias", 6176, decimalFormat.biasedExponent(0));
     }
 
 }

@@ -47,11 +47,11 @@ enum DecimalFormat {
     final int exponentContinuationBits;
     final int coefficientContinuationBits;
     final int eLimit;
-    final int eMax;
-    final int eMin;
-    final int exponentBias;
-    final BigInteger maxCoefficient;
-    final BigInteger minCoefficient;
+    private final int eMax;
+    private final int eMin;
+    private final int exponentBias;
+    private final BigInteger maxCoefficient;
+    private final BigInteger minCoefficient;
 
     DecimalFormat(int formatBitLength, int coefficientDigits) {
         assert formatBitLength > 0 && formatBitLength % 8 == 0;
@@ -70,6 +70,14 @@ enum DecimalFormat {
         minCoefficient = maxCoefficient.negate();
     }
 
+    final int biasedExponent(int unbiasedExponent) {
+        return unbiasedExponent + exponentBias;
+    }
+
+    final int unbiasedExponent(int biasedExponent) {
+        return biasedExponent - exponentBias;
+    }
+
     /**
      * Validates the format length.
      *
@@ -84,61 +92,8 @@ enum DecimalFormat {
         }
     }
 
-    final SimpleDecimal validate(SimpleDecimal simpleDecimal) {
-        if (simpleDecimal.getType() == DecimalType.NORMAL) {
-            validateExponent0(simpleDecimal.getExponent());
-            validateCoefficient0(simpleDecimal.getCoefficient());
-        }
-        return simpleDecimal;
-    }
-
-    /**
-     * Validates exponent, and returns the value if within range, otherwise throws an {@code IllegalArgumentException}.
-     * <p>
-     * In cases where the exponent is out of range, rescaling may be appropriate, this validation does not take
-     * rescaling into consideration.
-     * </p>
-     *
-     * @param exponent
-     *         Exponent value
-     * @return {@code exponent}
-     * @throws IllegalArgumentException
-     *         If the exponent is out of range.
-     */
-    final int validateExponent(final int exponent) {
-        validateExponent0(exponent);
-        return exponent;
-    }
-
-    private void validateExponent0(int exponent) {
-        final int exponentAndBias = exponent + exponentBias;
-        if (exponentAndBias < 0 || exponentAndBias > eLimit) {
-            throw new IllegalArgumentException("Exponent outside of range, exponent: " + exponent);
-        }
-    }
-
-    /**
-     * Validates coefficient, and returns the value if within range, otherwise throws an {@code IllegalArgumentException}.
-     * <p>
-     * In cases where the coefficient is out of range, rescaling may be appropriate, this validation does not take
-     * rescaling into consideration.
-     * </p>
-     *
-     * @param coefficient
-     *         Coefficient value
-     * @return {@code coefficient}
-     * @throws IllegalArgumentException
-     *         If the coefficient is out of range.
-     */
-    final BigInteger validateCoefficient(BigInteger coefficient) {
-        validateCoefficient0(coefficient);
-        return coefficient;
-    }
-
-    private void validateCoefficient0(BigInteger coefficient) {
-        if (minCoefficient.compareTo(coefficient) > 0 || maxCoefficient.compareTo(coefficient) < 0) {
-            throw new IllegalArgumentException("Value is out of range, coefficient: " + coefficient);
-        }
+    final boolean isCoefficientInRange(BigInteger coefficient) {
+        return minCoefficient.compareTo(coefficient) > 0 || maxCoefficient.compareTo(coefficient) < 0;
     }
 
     private static int calculateCoefficientContinuationBits(int coefficientDigits) {
