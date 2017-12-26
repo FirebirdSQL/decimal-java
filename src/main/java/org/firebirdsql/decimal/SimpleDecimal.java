@@ -279,10 +279,13 @@ final class SimpleDecimal {
     }
 
     SimpleDecimal negate() {
-        if (type == DecimalType.NORMAL) {
-            return new SimpleDecimal(-1 * signum, coefficient, exponent);
+        if (type != DecimalType.NORMAL) {
+            return getSpecialConstant(type, -1 * signum);
+        } else if (coefficient.equals(BigInteger.ZERO)) {
+            return new SimpleDecimal(-1 * signum, BigInteger.ZERO, exponent);
+        } else {
+            return new SimpleDecimal(-1 * signum, coefficient.negate(), exponent);
         }
-        return getSpecialConstant(type, -1 * signum);
     }
 
     static SimpleDecimal getSpecialConstant(DecimalType decimalType, int signum) {

@@ -51,7 +51,7 @@ public final class Decimal128 extends AbstractDecimal<Decimal128> {
         if (type == DecimalType.NORMAL) {
             return new Decimal128(getValue().negate());
         }
-        return getSpecialConstant(type, getSignum());
+        return getSpecialConstant(type, -1 * getSignum());
     }
 
     @Override
@@ -80,6 +80,10 @@ public final class Decimal128 extends AbstractDecimal<Decimal128> {
      */
     public static Decimal128 valueOfExact(final BigDecimal bigDecimal) {
         return new Decimal128(SimpleDecimal.valueOf(bigDecimal));
+    }
+
+    static Decimal128 valueOf(SimpleDecimal simpleDecimal) {
+        return new Decimal128(simpleDecimal);
     }
 
     private static Decimal128 getSpecialConstant(DecimalType decimalType, int signum) {

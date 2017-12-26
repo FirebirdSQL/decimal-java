@@ -51,7 +51,7 @@ public final class Decimal32 extends AbstractDecimal<Decimal32> {
         if (type == DecimalType.NORMAL) {
             return new Decimal32(getValue().negate());
         }
-        return getSpecialConstant(type, getSignum());
+        return getSpecialConstant(type, -1 * getSignum());
     }
 
     @Override
@@ -80,6 +80,10 @@ public final class Decimal32 extends AbstractDecimal<Decimal32> {
      */
     public static Decimal32 valueOfExact(final BigDecimal bigDecimal) {
         return new Decimal32(SimpleDecimal.valueOf(bigDecimal));
+    }
+
+    static Decimal32 valueOf(SimpleDecimal simpleDecimal) {
+        return new Decimal32(simpleDecimal);
     }
 
     private static Decimal32 getSpecialConstant(DecimalType decimalType, int signum) {

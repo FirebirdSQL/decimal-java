@@ -51,7 +51,7 @@ public final class Decimal64 extends AbstractDecimal<Decimal64> {
         if (type == DecimalType.NORMAL) {
             return new Decimal64(getValue().negate());
         }
-        return getSpecialConstant(type, getSignum());
+        return getSpecialConstant(type, -1 * getSignum());
     }
 
     @Override
@@ -80,6 +80,10 @@ public final class Decimal64 extends AbstractDecimal<Decimal64> {
      */
     public static Decimal64 valueOfExact(final BigDecimal bigDecimal) {
         return new Decimal64(SimpleDecimal.valueOf(bigDecimal));
+    }
+
+    static Decimal64 valueOf(SimpleDecimal simpleDecimal) {
+        return new Decimal64(simpleDecimal);
     }
 
     private static Decimal64 getSpecialConstant(DecimalType decimalType, int signum) {
