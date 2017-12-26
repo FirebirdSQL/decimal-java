@@ -133,25 +133,33 @@ final class SimpleDecimal {
         if (biasedExponent < 0) {
             return increaseExponent(-1 * biasedExponent);
         } else if (biasedExponent > decimalFormat.eLimit) {
-            return decreaseExponent(biasedExponent - decimalFormat.eLimit);
+            return decreaseExponent(biasedExponent - decimalFormat.eLimit, decimalFormat);
         }
         return this;
     }
 
     /**
-     * Decreases the exponent by the requested number of steps.
+     * Attempts to decreases the exponent by the requested number of steps.
      * <p>
-     * The decrease of exponent is achieved by multiplying the coefficient by {@code 10^exponentDecrease}
+     * The decrease of exponent is achieved by multiplying the coefficient by {@code 10^exponentDecrease}.
+     * </p>
+     * <p>
+     * The decrease can only be achieved if smaller than the number of coefficient digits, except for a zero value. If
+     * the requested decrease is larger, then no decrease is attempted and {@code this} simple decimal is returned
+     * unchanged.
      * </p>
      *
      * @param exponentDecrease
      *         Requested decrease of the exponent
-     * @return A simple decimal with decreased exponent
+     * @return A simple decimal with decreased exponent, or this unchanged vaue
      */
-    private SimpleDecimal decreaseExponent(int exponentDecrease) {
+    private SimpleDecimal decreaseExponent(int exponentDecrease, DecimalFormat decimalFormat) {
         assert exponentDecrease > 0 : "decreaseExponent requires > 0 value";
         if (coefficient.equals(BigInteger.ZERO)) {
             return new SimpleDecimal(BigInteger.ZERO, exponent - exponentDecrease);
+        } else if (exponentDecrease > decimalFormat.coefficientDigits - 1) {
+            // attempting exponent decrease is useless (and this avoids multiplication below)
+            return this;
         }
         BigInteger newCoefficient = coefficient.multiply(BigInteger.TEN.pow(exponentDecrease));
         return new SimpleDecimal(newCoefficient, exponent - exponentDecrease);
@@ -180,8 +188,9 @@ final class SimpleDecimal {
         int newExponent = exponent;
         BigInteger[] divAndRemainder = newCoefficient.divideAndRemainder(BigInteger.TEN);
         while (exponentIncrease-- > 0 && divAndRemainder[1].equals(BigInteger.ZERO)) {
-            newCoefficient = divAndRemainder[0];
             newExponent++;
+            newCoefficient = divAndRemainder[0];
+            divAndRemainder = newCoefficient.divideAndRemainder(BigInteger.TEN);
         }
         if (newCoefficient.equals(coefficient) && newExponent == exponent) {
             return this;

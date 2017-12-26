@@ -32,6 +32,7 @@ import java.util.Collection;
 import static org.firebirdsql.decimal.util.ByteArrayHelper.hexToBytes;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
@@ -50,6 +51,7 @@ public class Decimal64ByteConversionTest {
 
     @Test
     public void testConversionFromBytesToDecimal64() {
+        assumeTrue("No source bytes for " + description, sourceBytes != null);
         Decimal64 result = Decimal64.parseBytes(sourceBytes);
 
         assertEquals("Expected " + description, decimalValue, result);
@@ -57,6 +59,7 @@ public class Decimal64ByteConversionTest {
 
     @Test
     public void testConversionFromDecimal64ToBytes() {
+        assumeTrue("No target bytes for " + description, targetBytes != null);
         byte[] result = decimalValue.toBytes();
 
         assertArrayEquals(targetBytes, result);
@@ -107,10 +110,9 @@ public class Decimal64ByteConversionTest {
                 testCase("77fcff3fcff3fcff", "9.999999999999999E+384"),
                 testCase("47fd34b9c1e28e56", "1.234567890123456E+384"),
                 // fold-downs
-                // clamped testcase doesn't work (implementation limit of dec test method; TODO Fix)
-                // TODO testCase("1.23E+384", "47fd300000000000"),
+                testCase(null, "1.23E+384", "47fd300000000000"),
                 testCase("47fd300000000000", "1.230000000000000E+384"),
-                // TODO testCase("1E+384", "47fc000000000000"),
+                testCase(null, "1E+384", "47fc000000000000"),
                 testCase("47fc000000000000", "1.000000000000000E+384"),
                 testCase("22380000000049c5", "12345"),
                 testCase("2238000000000534", "1234"),
@@ -144,10 +146,9 @@ public class Decimal64ByteConversionTest {
                 testCase("f7fcff3fcff3fcff", "-9.999999999999999E+384"),
                 testCase("c7fd34b9c1e28e56", "-1.234567890123456E+384"),
                 // fold-downs
-                // clamped testcase doesn't work (implementation limit of dec test method; TODO Fix)
-                // TODO testCase("-1.23E+384", "c7fd300000000000"),
+                testCase(null, "-1.23E+384", "c7fd300000000000"),
                 testCase("c7fd300000000000", "-1.230000000000000E+384"),
-                // TODO testCase("-1E+384", "c7fc000000000000"),
+                testCase(null, "-1E+384", "c7fc000000000000"),
                 testCase("c7fc000000000000", "-1.000000000000000E+384"),
                 // overflows
                 testCase("a2380000000049c5", "-12345"),
@@ -178,12 +179,10 @@ public class Decimal64ByteConversionTest {
                 testCase("80009124491246a4", "-1.11111111111524E-384"),
                 // near-underflows
                 testCase("8000000000000001", "-1e-398"),
-                // subnormal rounded testcase doesn't work (implementation limit of dec test method; TODO Fix)
-                // TODO testCase("-1.0e-398", "8000000000000001")
+                testCase(null, "-1.0e-398", "8000000000000001"),
                 // zeros
-                // clamped testcase doesn't work (implementation limit of dec test method; TODO Fix)
-                // TODO testCase("0E-500", "0000000000000000"),
-                // TODO testCase("0E-400", "0000000000000000"),
+                testCase(null, "0E-500", "0000000000000000"),
+                testCase(null, "0E-400", "0000000000000000"),
                 testCase("0000000000000000", "0E-398"),
                 testCase("0000000000000000", "0.000000000000000E-383"),
                 testCase("2230000000000000", "0E-2"),
@@ -192,16 +191,14 @@ public class Decimal64ByteConversionTest {
                 testCase("2244000000000000", "0E+3"),
                 testCase("43fc000000000000", "0E+369"),
                 // clamped zeros...
-                // clamped testcase doesn't work (implementation limit of dec test method; TODO Fix)
-                // TODO testCase("0E+370", "43fc000000000000"),
-                // TODO testCase("0E+384", "43fc000000000000"),
-                // TODO testCase("0E+400", "43fc000000000000"),
-                // TODO testCase("0E+500", "43fc000000000000"),
+                testCase(null, "0E+370", "43fc000000000000"),
+                testCase(null, "0E+384", "43fc000000000000"),
+                testCase(null, "0E+400", "43fc000000000000"),
+                testCase(null, "0E+500", "43fc000000000000"),
                 // negative zeros
                 // clamped testcase doesn't work (implementation limit of dec test method; TODO Fix)
-                // TODO testCase("-0E-500", "8000000000000000"),
-                // TODO testCase("-0E-400", "8000000000000000"),
-                // TODO support parsing of negative zero?
+                testCase("-0E-500", null, dec("0E-500").negate(), hexToBytes("8000000000000000")),
+                testCase("-0E-400", null, dec("0E-400").negate(), hexToBytes("8000000000000000")),
                 testCase("-0E-398", hexToBytes("8000000000000000"), dec("0E-398").negate()),
                 testCase("-0.000000000000000E-383", hexToBytes("8000000000000000"), dec("0.000000000000000E-383").negate()),
                 testCase("-0E-2", hexToBytes("a230000000000000"), dec("0E-2").negate()),
@@ -209,58 +206,123 @@ public class Decimal64ByteConversionTest {
                 testCase("-0E+3", hexToBytes("a244000000000000"), dec("0E+3").negate()),
                 testCase("-0E+369", hexToBytes("c3fc000000000000"), dec("0E+369").negate()),
                 // clamped zeros...
-                // clamped testcase doesn't work (implementation limit of dec test method; TODO Fix)
-                // TODO testCase("-0E+370", dec("0E+370").negate(), hexToBytes("c3fc000000000000")),
-                // TODO testCase("-0E+384", dec("0E+384").negate(), hexToBytes("c3fc000000000000")),
-                // TODO testCase("-0E+400", dec("0E+400").negate(), hexToBytes("c3fc000000000000")),
-                // TODO testCase("-0E+500", dec("0E+500").negate(), hexToBytes("c3fc000000000000")),
+                testCase("-0E+370", null, dec("0E+370").negate(), hexToBytes("c3fc000000000000")),
+                testCase("-0E+384", null, dec("0E+384").negate(), hexToBytes("c3fc000000000000")),
+                testCase("-0E+400", null, dec("0E+400").negate(), hexToBytes("c3fc000000000000")),
+                testCase("-0E+500", null, dec("0E+500").negate(), hexToBytes("c3fc000000000000")),
                 // exponents
                 testCase("225c000000000007", "7E+9"),
                 testCase("23c4000000000007", "7E+99"),
-                //specials (may have overlap with earlier cases) TODO Some of these will certainly not roundtrip
+                //specials (may have overlap with earlier cases)
                 testCase("Infinity", hexToBytes("7800000000000000"), Decimal64.POSITIVE_INFINITY),
-                testCase("Infinity", hexToBytes("7878787878787878"), Decimal64.POSITIVE_INFINITY, hexToBytes("7800000000000000")),
-                testCase("Infinity", hexToBytes("7979797979797979"), Decimal64.POSITIVE_INFINITY, hexToBytes("7800000000000000")),
-                testCase("Infinity", hexToBytes("7900000000000000"), Decimal64.POSITIVE_INFINITY, hexToBytes("7800000000000000")),
-                testCase("Infinity", hexToBytes("7a7a7a7a7a7a7a7a"), Decimal64.POSITIVE_INFINITY, hexToBytes("7800000000000000")),
-                testCase("Infinity", hexToBytes("7a00000000000000"), Decimal64.POSITIVE_INFINITY, hexToBytes("7800000000000000")),
-                testCase("Infinity", hexToBytes("7b7b7b7b7b7b7b7b"), Decimal64.POSITIVE_INFINITY, hexToBytes("7800000000000000")),
-                testCase("Infinity", hexToBytes("7b00000000000000"), Decimal64.POSITIVE_INFINITY, hexToBytes("7800000000000000")),
+                testCase("Infinity", hexToBytes("7878787878787878"), Decimal64.POSITIVE_INFINITY, null),
+                testCase("Infinity", hexToBytes("7979797979797979"), Decimal64.POSITIVE_INFINITY, null),
+                testCase("Infinity", hexToBytes("7900000000000000"), Decimal64.POSITIVE_INFINITY, null),
+                testCase("Infinity", hexToBytes("7a7a7a7a7a7a7a7a"), Decimal64.POSITIVE_INFINITY, null),
+                testCase("Infinity", hexToBytes("7a00000000000000"), Decimal64.POSITIVE_INFINITY, null),
+                testCase("Infinity", hexToBytes("7b7b7b7b7b7b7b7b"), Decimal64.POSITIVE_INFINITY, null),
+                testCase("Infinity", hexToBytes("7b00000000000000"), Decimal64.POSITIVE_INFINITY, null),
                 testCase("NaN", hexToBytes("7c00000000000000"), Decimal64.POSITIVE_NAN),
-                testCase("NaN", hexToBytes("7c7c7c7c7c7c7c7c"), Decimal64.POSITIVE_NAN, hexToBytes("7c00000000000000")),
-                testCase("NaN", hexToBytes("7c007c7c7c7c7c7c"), Decimal64.POSITIVE_NAN, hexToBytes("7c00000000000000")),
-                testCase("NaN", hexToBytes("7d7d7d7d7d7d7d7d"), Decimal64.POSITIVE_NAN, hexToBytes("7c00000000000000")),
-                testCase("NaN", hexToBytes("7c017d7d7d7d7d7d"), Decimal64.POSITIVE_NAN, hexToBytes("7c00000000000000")),
+                testCase("NaN", hexToBytes("7c7c7c7c7c7c7c7c"), Decimal64.POSITIVE_NAN, null),
+                testCase("NaN", hexToBytes("7c007c7c7c7c7c7c"), Decimal64.POSITIVE_NAN, null),
+                testCase("NaN", hexToBytes("7d7d7d7d7d7d7d7d"), Decimal64.POSITIVE_NAN, null),
+                testCase("NaN", hexToBytes("7c017d7d7d7d7d7d"), Decimal64.POSITIVE_NAN, null),
                 testCase("sNaN", hexToBytes("7e00000000000000"), Decimal64.POSITIVE_SIGNALING_NAN),
-                testCase("sNaN", hexToBytes("7e7e7e7e7e7e7e7e"), Decimal64.POSITIVE_SIGNALING_NAN, hexToBytes("7e00000000000000")),
-                testCase("sNaN", hexToBytes("7e007e7e7e7e7c7e"), Decimal64.POSITIVE_SIGNALING_NAN, hexToBytes("7e00000000000000")),
-                testCase("sNaN", hexToBytes("7f7f7f7f7f7f7f7f"), Decimal64.POSITIVE_SIGNALING_NAN, hexToBytes("7e00000000000000")),
-                testCase("sNaN", hexToBytes("7e007f7f7f7f7c7f"), Decimal64.POSITIVE_SIGNALING_NAN, hexToBytes("7e00000000000000")),
-                testCase("sNaN", hexToBytes("7f00000000000000"), Decimal64.POSITIVE_SIGNALING_NAN, hexToBytes("7e00000000000000")),
-                testCase("sNaN", hexToBytes("7fffffffffffffff"), Decimal64.POSITIVE_SIGNALING_NAN, hexToBytes("7e00000000000000")),
-                testCase("sNaN", hexToBytes("7e00ff3fcff3fcff"), Decimal64.POSITIVE_SIGNALING_NAN, hexToBytes("7e00000000000000")),
+                testCase("sNaN", hexToBytes("7e7e7e7e7e7e7e7e"), Decimal64.POSITIVE_SIGNALING_NAN, null),
+                testCase("sNaN", hexToBytes("7e007e7e7e7e7c7e"), Decimal64.POSITIVE_SIGNALING_NAN, null),
+                testCase("sNaN", hexToBytes("7f7f7f7f7f7f7f7f"), Decimal64.POSITIVE_SIGNALING_NAN, null),
+                testCase("sNaN", hexToBytes("7e007f7f7f7f7c7f"), Decimal64.POSITIVE_SIGNALING_NAN, null),
+                testCase("sNaN", hexToBytes("7f00000000000000"), Decimal64.POSITIVE_SIGNALING_NAN, null),
+                testCase("sNaN", hexToBytes("7fffffffffffffff"), Decimal64.POSITIVE_SIGNALING_NAN, null),
+                testCase("sNaN", hexToBytes("7e00ff3fcff3fcff"), Decimal64.POSITIVE_SIGNALING_NAN, null),
                 testCase("-Infinity", hexToBytes("f800000000000000"), Decimal64.NEGATIVE_INFINITY),
-                testCase("-Infinity", hexToBytes("f878787878787878"), Decimal64.NEGATIVE_INFINITY, hexToBytes("f800000000000000")),
-                testCase("-Infinity", hexToBytes("f979797979797979"), Decimal64.NEGATIVE_INFINITY, hexToBytes("f800000000000000")),
-                testCase("-Infinity", hexToBytes("fa7a7a7a7a7a7a7a"), Decimal64.NEGATIVE_INFINITY, hexToBytes("f800000000000000")),
-                testCase("-Infinity", hexToBytes("fa00000000000000"), Decimal64.NEGATIVE_INFINITY, hexToBytes("f800000000000000")),
-                testCase("-Infinity", hexToBytes("fb7b7b7b7b7b7b7b"), Decimal64.NEGATIVE_INFINITY, hexToBytes("f800000000000000")),
-                testCase("-Infinity", hexToBytes("fb00000000000000"), Decimal64.NEGATIVE_INFINITY, hexToBytes("f800000000000000")),
+                testCase("-Infinity", hexToBytes("f878787878787878"), Decimal64.NEGATIVE_INFINITY, null),
+                testCase("-Infinity", hexToBytes("f979797979797979"), Decimal64.NEGATIVE_INFINITY, null),
+                testCase("-Infinity", hexToBytes("fa7a7a7a7a7a7a7a"), Decimal64.NEGATIVE_INFINITY, null),
+                testCase("-Infinity", hexToBytes("fa00000000000000"), Decimal64.NEGATIVE_INFINITY, null),
+                testCase("-Infinity", hexToBytes("fb7b7b7b7b7b7b7b"), Decimal64.NEGATIVE_INFINITY, null),
+                testCase("-Infinity", hexToBytes("fb00000000000000"), Decimal64.NEGATIVE_INFINITY, null),
                 testCase("-NaN", hexToBytes("fc00000000000000"), Decimal64.NEGATIVE_NAN),
-                testCase("-NaN", hexToBytes("fc7c7c7c7c7c7c7c"), Decimal64.NEGATIVE_NAN, hexToBytes("fc00000000000000")),
-                testCase("-NaN", hexToBytes("fc007c7c7c7c7c7c"), Decimal64.NEGATIVE_NAN, hexToBytes("fc00000000000000")),
-                testCase("-NaN", hexToBytes("fd7d7d7d7d7d7d7d"), Decimal64.NEGATIVE_NAN, hexToBytes("fc00000000000000")),
-                testCase("-NaN", hexToBytes("fc017d7d7d7d7d7d"), Decimal64.NEGATIVE_NAN, hexToBytes("fc00000000000000")),
+                testCase("-NaN", hexToBytes("fc7c7c7c7c7c7c7c"), Decimal64.NEGATIVE_NAN, null),
+                testCase("-NaN", hexToBytes("fc007c7c7c7c7c7c"), Decimal64.NEGATIVE_NAN, null),
+                testCase("-NaN", hexToBytes("fd7d7d7d7d7d7d7d"), Decimal64.NEGATIVE_NAN, null),
+                testCase("-NaN", hexToBytes("fc017d7d7d7d7d7d"), Decimal64.NEGATIVE_NAN, null),
                 testCase("-sNaN", hexToBytes("fe00000000000000"), Decimal64.NEGATIVE_SIGNALING_NAN),
-                testCase("-sNaN", hexToBytes("fe7e7e7e7e7e7e7e"), Decimal64.NEGATIVE_SIGNALING_NAN, hexToBytes("fe00000000000000")),
-                testCase("-sNaN", hexToBytes("fe007e7e7e7e7c7e"), Decimal64.NEGATIVE_SIGNALING_NAN, hexToBytes("fe00000000000000")),
-                testCase("-sNaN", hexToBytes("ff7f7f7f7f7f7f7f"), Decimal64.NEGATIVE_SIGNALING_NAN, hexToBytes("fe00000000000000")),
-                testCase("-sNaN", hexToBytes("fe007f7f7f7f7c7f"), Decimal64.NEGATIVE_SIGNALING_NAN, hexToBytes("fe00000000000000")),
-                testCase("-sNaN", hexToBytes("ff00000000000000"), Decimal64.NEGATIVE_SIGNALING_NAN, hexToBytes("fe00000000000000")),
-                testCase("-sNaN", hexToBytes("ffffffffffffffff"), Decimal64.NEGATIVE_SIGNALING_NAN, hexToBytes("fe00000000000000")),
-                testCase("-sNaN", hexToBytes("fe00ff3fcff3fcff"), Decimal64.NEGATIVE_SIGNALING_NAN, hexToBytes("fe00000000000000")),
+                testCase("-sNaN", hexToBytes("fe7e7e7e7e7e7e7e"), Decimal64.NEGATIVE_SIGNALING_NAN, null),
+                testCase("-sNaN", hexToBytes("fe007e7e7e7e7c7e"), Decimal64.NEGATIVE_SIGNALING_NAN, null),
+                testCase("-sNaN", hexToBytes("ff7f7f7f7f7f7f7f"), Decimal64.NEGATIVE_SIGNALING_NAN, null),
+                testCase("-sNaN", hexToBytes("fe007f7f7f7f7c7f"), Decimal64.NEGATIVE_SIGNALING_NAN, null),
+                testCase("-sNaN", hexToBytes("ff00000000000000"), Decimal64.NEGATIVE_SIGNALING_NAN, null),
+                testCase("-sNaN", hexToBytes("ffffffffffffffff"), Decimal64.NEGATIVE_SIGNALING_NAN, null),
+                testCase("-sNaN", hexToBytes("fe00ff3fcff3fcff"), Decimal64.NEGATIVE_SIGNALING_NAN, null),
                 // diagnostic NaNs skipped, not supported, handled as 'normal' NaNs!
-                // fold-down full sequence skipped (TODO Add?)
+                // too many digits
+                // fold-down full sequence
+                testCase(null, "1E+384", "47fc000000000000"),
+                testCase("47fc000000000000", "1.000000000000000E+384"),
+                testCase(null, "1E+383", "43fc800000000000"),
+                testCase("43fc800000000000", "1.00000000000000E+383"),
+                testCase(null, "1E+382", "43fc100000000000"),
+                testCase("43fc100000000000", "1.0000000000000E+382"),
+                testCase(null, "1E+381", "43fc010000000000"),
+                testCase("43fc010000000000", "1.000000000000E+381"),
+                testCase(null, "1E+380", "43fc002000000000"),
+                testCase("43fc002000000000", "1.00000000000E+380"),
+                testCase(null, "1E+379", "43fc000400000000"),
+                testCase("43fc000400000000", "1.0000000000E+379"),
+                testCase(null, "1E+378", "43fc000040000000"),
+                testCase("43fc000040000000", "1.000000000E+378"),
+                testCase(null, "1E+377", "43fc000008000000"),
+                testCase("43fc000008000000", "1.00000000E+377"),
+                testCase(null, "1E+376", "43fc000001000000"),
+                testCase("43fc000001000000", "1.0000000E+376"),
+                testCase(null, "1E+375", "43fc000000100000"),
+                testCase("43fc000000100000", "1.000000E+375"),
+                testCase(null, "1E+374", "43fc000000020000"),
+                testCase("43fc000000020000", "1.00000E+374"),
+                testCase(null, "1E+373", "43fc000000004000"),
+                testCase("43fc000000004000", "1.0000E+373"),
+                testCase(null, "1E+372", "43fc000000000400"),
+                testCase("43fc000000000400", "1.000E+372"),
+                testCase(null, "1E+371", "43fc000000000080"),
+                testCase("43fc000000000080", "1.00E+371"),
+                testCase(null, "1E+370", "43fc000000000010"),
+                testCase("43fc000000000010", "1.0E+370"),
+                testCase("43fc000000000001", "1E+369"),
+                testCase("43f8000000000001", "1E+368"),
+                // same with 9s
+                testCase(null, "9E+384", "77fc000000000000"),
+                testCase("77fc000000000000", "9.000000000000000E+384"),
+                testCase(null, "9E+383", "43fc8c0000000000"),
+                testCase("43fc8c0000000000", "9.00000000000000E+383"),
+                testCase(null, "9E+382", "43fc1a0000000000"),
+                testCase("43fc1a0000000000", "9.0000000000000E+382"),
+                testCase(null, "9E+381", "43fc090000000000"),
+                testCase("43fc090000000000", "9.000000000000E+381"),
+                testCase(null, "9E+380", "43fc002300000000"),
+                testCase("43fc002300000000", "9.00000000000E+380"),
+                testCase(null, "9E+379", "43fc000680000000"),
+                testCase("43fc000680000000", "9.0000000000E+379"),
+                testCase(null, "9E+378", "43fc000240000000"),
+                testCase("43fc000240000000", "9.000000000E+378"),
+                testCase(null, "9E+377", "43fc000008c00000"),
+                testCase("43fc000008c00000", "9.00000000E+377"),
+                testCase(null, "9E+376", "43fc000001a00000"),
+                testCase("43fc000001a00000", "9.0000000E+376"),
+                testCase(null, "9E+375", "43fc000000900000"),
+                testCase("43fc000000900000", "9.000000E+375"),
+                testCase(null, "9E+374", "43fc000000023000"),
+                testCase("43fc000000023000", "9.00000E+374"),
+                testCase(null, "9E+373", "43fc000000006800"),
+                testCase("43fc000000006800", "9.0000E+373"),
+                testCase(null, "9E+372", "43fc000000002400"),
+                testCase("43fc000000002400", "9.000E+372"),
+                testCase(null, "9E+371", "43fc00000000008c"),
+                testCase("43fc00000000008c", "9.00E+371"),
+                testCase(null, "9E+370", "43fc00000000001a"),
+                testCase("43fc00000000001a", "9.0E+370"),
+                testCase("43fc000000000009", "9E+369"),
+                testCase("43f8000000000009", "9E+368"),
                 // Selected DPD codes
                 testCase("2238000000000000", "0"),
                 testCase("2238000000000009", "9"),
@@ -306,7 +368,7 @@ public class Decimal64ByteConversionTest {
                 testCase("22380000000003bf", "979"),
                 testCase("22380000000003df", "799"),
                 testCase("223800000000006e", "888"),
-                // DPD all-highs cases (includes the 24 redundant codes) (NOTE: might not roundtrip)
+                // DPD all-highs cases (includes the 24 redundant codes)
                 testCase("223800000000006e", "888"),
                 testCase("223800000000016e", "888", "223800000000006e"),
                 testCase("223800000000026e", "888", "223800000000006e"),
@@ -354,6 +416,7 @@ public class Decimal64ByteConversionTest {
                 testCase("2238000115afb57b", "4294967297"),
                 // for narrowing
                 testCase("2870000000000000", "2.000000000000000E-99"),
+                // some miscellaneous
                 testCase("0004070000000000", "7.000000000000E-385"),
                 testCase("0008000000020000", "1.00000E-391")
         );
