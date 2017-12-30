@@ -23,6 +23,8 @@ package org.firebirdsql.decimal;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.Objects;
 
 import static org.firebirdsql.decimal.Signum.NEGATIVE;
@@ -30,6 +32,9 @@ import static org.firebirdsql.decimal.Signum.POSITIVE;
 
 /**
  * Class with all relevant data of a decimal.
+ * <p>
+ * This is a thin wrapper around a {@link BigDecimal} with separate handling for the specials (Inf, Nan, sNaN).
+ * </p>
  *
  * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
  */
@@ -44,26 +49,26 @@ final class SimpleDecimal {
 
     private final int signum;
     private final DecimalType type;
-    private final BigInteger coefficient;
-    private final int exponent;
+    private final BigDecimal bigDecimal;
 
     private SimpleDecimal(int signum, DecimalType type) {
         assert type != null : "Type should not be null";
         assert type != DecimalType.NORMAL : "Constructor only suitable for non-NORMAL";
+        assert -1 == signum || signum == 1 : "Invalid signum, " + signum;
         this.signum = signum;
         this.type = type;
-        coefficient = null;
-        exponent = Integer.MIN_VALUE;
+        bigDecimal = null;
+    }
+
+    SimpleDecimal(int signum, BigDecimal bigDecimal) {
+        assert -1 <= signum && signum <= 1 : "Invalid signum, " + signum;
+        this.type = DecimalType.NORMAL;
+        this.signum = signum != 0 ? signum : Signum.POSITIVE;
+        this.bigDecimal = bigDecimal;
     }
 
     SimpleDecimal(BigInteger coefficient, int exponent) {
-        this.type = DecimalType.NORMAL;
-        // Consider zero as positive
-        this.signum = coefficient.equals(BigInteger.ZERO)
-                ? POSITIVE
-                : coefficient.signum();
-        this.coefficient = coefficient;
-        this.exponent = exponent;
+        this(coefficient.equals(BigInteger.ZERO) ? POSITIVE : coefficient.signum(), coefficient, exponent);
     }
 
     SimpleDecimal(int signum, BigInteger coefficient, int exponent) {
@@ -71,8 +76,7 @@ final class SimpleDecimal {
                 : "signum value not consistent with coefficient";
         type = DecimalType.NORMAL;
         this.signum = signum;
-        this.coefficient = coefficient;
-        this.exponent = exponent;
+        bigDecimal = new BigDecimal(coefficient, -exponent);
     }
 
     DecimalType getType() {
@@ -83,12 +87,32 @@ final class SimpleDecimal {
         return signum;
     }
 
-    BigInteger getCoefficient() {
-        return coefficient;
-    }
-
-    int getExponent() {
-        return exponent;
+    /**
+     * Rounds and rescales this decimal to the precision of the provided decimal format.
+     * <p>
+     * Rounding is done in three steps:
+     * </p>
+     * <ul>
+     *     <li>the value is rounded to the precision required</li>
+     *     <li>the value is rescaled to the scale boundaries if possible, for small values (out of range negative
+     *     exponents) this may round to a value of zero</li>
+     *     <li>values with an out-of-range (too high) exponent are replaced with +/-Infinity</li>
+     * </ul>
+     *
+     * @param decimalFormat Decimal format to apply
+     * @return Simple decimal conforming to the specified decimal format
+     */
+    SimpleDecimal round(DecimalFormat decimalFormat) {
+        if (type != DecimalType.NORMAL) {
+            return this;
+        }
+        final MathContext mathContext = decimalFormat.getMathContext();
+        final SimpleDecimal newValue = new SimpleDecimal(signum, bigDecimal.round(mathContext))
+                    .rescale(decimalFormat, mathContext.getRoundingMode());
+        if (decimalFormat.biasedExponent(-newValue.bigDecimal.scale()) > decimalFormat.eLimit) {
+            return getSpecialConstant(DecimalType.INFINITY, signum);
+        }
+        return newValue;
     }
 
     /**
@@ -101,7 +125,8 @@ final class SimpleDecimal {
      * @param decimalFormat
      *         Decimal format
      * @return An instance of simple decimal that fits the requirements of the decimal format
-     * @throws DecimalOverflowException If the coefficient or exponent is out of range even after (attempted) rescaling
+     * @throws DecimalOverflowException
+     *         If the coefficient or exponent is out of range even after (attempted) rescaling
      */
     SimpleDecimal rescaleAndValidate(DecimalFormat decimalFormat) {
         return rescale(decimalFormat)
@@ -126,12 +151,16 @@ final class SimpleDecimal {
      * @return A new instance of {@code SimpleDecimal}, which may or may not fit the {@code decimalFormat}.
      */
     SimpleDecimal rescale(DecimalFormat decimalFormat) {
+        return rescale(decimalFormat, RoundingMode.UNNECESSARY);
+    }
+
+    private SimpleDecimal rescale(DecimalFormat decimalFormat, RoundingMode roundingMode) {
         if (type != DecimalType.NORMAL) {
             return this;
         }
-        int biasedExponent = decimalFormat.biasedExponent(exponent);
+        int biasedExponent = decimalFormat.biasedExponent(-bigDecimal.scale());
         if (biasedExponent < 0) {
-            return increaseExponent(-1 * biasedExponent);
+            return increaseExponent(-1 * biasedExponent, roundingMode);
         } else if (biasedExponent > decimalFormat.eLimit) {
             return decreaseExponent(biasedExponent - decimalFormat.eLimit, decimalFormat);
         }
@@ -151,51 +180,47 @@ final class SimpleDecimal {
      *
      * @param exponentDecrease
      *         Requested decrease of the exponent
-     * @return A simple decimal with decreased exponent, or this unchanged vaue
+     * @param decimalFormat
+     *         Decimal format
+     * @return A simple decimal with decreased exponent, or this unchanged value
      */
     private SimpleDecimal decreaseExponent(int exponentDecrease, DecimalFormat decimalFormat) {
         assert exponentDecrease > 0 : "decreaseExponent requires > 0 value";
-        if (coefficient.equals(BigInteger.ZERO)) {
-            return new SimpleDecimal(BigInteger.ZERO, exponent - exponentDecrease);
-        } else if (exponentDecrease > decimalFormat.coefficientDigits - 1) {
-            // attempting exponent decrease is useless (and this avoids multiplication below)
-            return this;
+        if (bigDecimal.compareTo(BigDecimal.ZERO) == 0
+                || exponentDecrease <= decimalFormat.coefficientDigits - bigDecimal.precision()) {
+            BigDecimal newValue = bigDecimal.setScale(bigDecimal.scale() + exponentDecrease, RoundingMode.UNNECESSARY);
+            return new SimpleDecimal(signum, newValue);
         }
-        BigInteger newCoefficient = coefficient.multiply(BigInteger.TEN.pow(exponentDecrease));
-        return new SimpleDecimal(newCoefficient, exponent - exponentDecrease);
+        return this;
     }
 
     /**
      * Attempts to increase the exponent by the requested number of steps.
      * <p>
-     * The increase of exponent is achieved by chopping of zeroes from the coefficient.
+     * The increase of exponent is achieved by chopping of zeroes from the coefficient, and if the {@code roundingMode}
+     * permits, rounding value. This may lead to loss of information.
      * </p>
      * <p>
-     * This increase can only be achieved if there are sufficient least significant digits with value
-     * zero ({@code '0'}), otherwise either a partially increased value or {@code this} simple decimal may be returned.
+     * With {@link RoundingMode#UNNECESSARY}, this increase can only be achieved if there are sufficient least
+     * significant digits with value zero ({@code '0'}), otherwise {@code this} simple decimal may be returned.
      * </p>
      *
      * @param exponentIncrease
      *         Requested increase of the exponent
-     * @return A simple decimal which may have its exponent increased, this increase may be less than requested.
+     * @param roundingMode
+     *         Rounding mode
+     * @return A simple decimal which may have its exponent increased, this increase may be less than requested,
+     * especially when rounding mode {@link RoundingMode#UNNECESSARY} is used.
      */
-    private SimpleDecimal increaseExponent(int exponentIncrease) {
+    private SimpleDecimal increaseExponent(int exponentIncrease, RoundingMode roundingMode) {
         assert exponentIncrease > 0 : "increaseExponent requires > 0 value";
-        if (coefficient.equals(BigInteger.ZERO)) {
-            return new SimpleDecimal(BigInteger.ZERO, exponent + exponentIncrease);
-        }
-        BigInteger newCoefficient = coefficient;
-        int newExponent = exponent;
-        BigInteger[] divAndRemainder = newCoefficient.divideAndRemainder(BigInteger.TEN);
-        while (exponentIncrease-- > 0 && divAndRemainder[1].equals(BigInteger.ZERO)) {
-            newExponent++;
-            newCoefficient = divAndRemainder[0];
-            divAndRemainder = newCoefficient.divideAndRemainder(BigInteger.TEN);
-        }
-        if (newCoefficient.equals(coefficient) && newExponent == exponent) {
+        try {
+            BigDecimal newValue = bigDecimal.setScale(bigDecimal.scale() - exponentIncrease, roundingMode);
+            return new SimpleDecimal(signum, newValue);
+        } catch (ArithmeticException e) {
+            // Rounding failed because we'd need to round, returning original value
             return this;
         }
-        return new SimpleDecimal(newCoefficient, newExponent);
     }
 
     /**
@@ -207,7 +232,7 @@ final class SimpleDecimal {
      * @throws DecimalOverflowException
      *         If the coefficient or exponent are out of range.
      */
-    final SimpleDecimal validate(DecimalFormat decimalFormat) {
+    private SimpleDecimal validate(DecimalFormat decimalFormat) {
         if (type == DecimalType.NORMAL) {
             validateExponent0(decimalFormat);
             validateCoefficient0(decimalFormat);
@@ -230,13 +255,13 @@ final class SimpleDecimal {
      */
     final int validateExponent(DecimalFormat decimalFormat) {
         validateExponent0(decimalFormat);
-        return exponent;
+        return -bigDecimal.scale();
     }
 
     private void validateExponent0(DecimalFormat decimalFormat) {
-        final int biasedExponent = decimalFormat.biasedExponent(exponent);
+        final int biasedExponent = decimalFormat.biasedExponent(-bigDecimal.scale());
         if (biasedExponent < 0 || biasedExponent > decimalFormat.eLimit) {
-            throw new DecimalOverflowException("Exponent is out of range, exponent: " + exponent);
+            throw new DecimalOverflowException("Exponent is out of range, exponent: " + -bigDecimal.scale());
         }
     }
 
@@ -255,12 +280,13 @@ final class SimpleDecimal {
      */
     final BigInteger validateCoefficient(DecimalFormat decimalFormat) {
         validateCoefficient0(decimalFormat);
-        return coefficient;
+        return bigDecimal.unscaledValue();
     }
 
     private void validateCoefficient0(DecimalFormat decimalFormat) {
-        if (decimalFormat.isCoefficientInRange(coefficient)) {
-            throw new DecimalOverflowException("Coefficient is out of range, coefficient: " + coefficient);
+        if (decimalFormat.isCoefficientInRange(bigDecimal.unscaledValue())) {
+            throw new DecimalOverflowException(
+                    "Coefficient is out of range, coefficient: " + bigDecimal.unscaledValue());
         }
     }
 
@@ -275,16 +301,14 @@ final class SimpleDecimal {
         if (getType() != DecimalType.NORMAL) {
             throw new NumberFormatException("Value " + toString() + " cannot be converted to a BigDecimal");
         }
-        return new BigDecimal(getCoefficient(), -1 * getExponent());
+        return bigDecimal;
     }
 
     SimpleDecimal negate() {
         if (type != DecimalType.NORMAL) {
             return getSpecialConstant(type, -1 * signum);
-        } else if (coefficient.equals(BigInteger.ZERO)) {
-            return new SimpleDecimal(-1 * signum, BigInteger.ZERO, exponent);
         } else {
-            return new SimpleDecimal(-1 * signum, coefficient.negate(), exponent);
+            return new SimpleDecimal(-1 * signum, bigDecimal.negate());
         }
     }
 
@@ -311,14 +335,14 @@ final class SimpleDecimal {
     }
 
     public static SimpleDecimal valueOf(BigDecimal bigDecimal) {
-        return new SimpleDecimal(bigDecimal.unscaledValue(), -1 * bigDecimal.scale());
+        return new SimpleDecimal(bigDecimal.signum(), bigDecimal);
     }
 
     @Override
     public String toString() {
         switch (type) {
         case NORMAL:
-            return coefficient + (exponent != 0 ? "E" + exponent : "");
+            return bigDecimal.toString();
         case INFINITY:
             return signum == -1 ? "-Infinity" : "+Infinity";
         case NAN:
@@ -337,17 +361,15 @@ final class SimpleDecimal {
         SimpleDecimal simpleDecimal = (SimpleDecimal) o;
 
         if (signum != simpleDecimal.signum) return false;
-        if (exponent != simpleDecimal.exponent) return false;
         if (type != simpleDecimal.type) return false;
-        return coefficient != null ? coefficient.equals(simpleDecimal.coefficient) : simpleDecimal.coefficient == null;
+        return bigDecimal != null ? bigDecimal.equals(simpleDecimal.bigDecimal) : simpleDecimal.bigDecimal == null;
     }
 
     @Override
     public int hashCode() {
         int result = signum;
         result = 31 * result + type.hashCode();
-        result = 31 * result + (coefficient != null ? coefficient.hashCode() : 0);
-        result = 31 * result + exponent;
+        result = 31 * result + (bigDecimal != null ? bigDecimal.hashCode() : 0);
         return result;
     }
 

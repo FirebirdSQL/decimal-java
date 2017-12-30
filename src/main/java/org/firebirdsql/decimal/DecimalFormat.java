@@ -22,6 +22,7 @@
 package org.firebirdsql.decimal;
 
 import java.math.BigInteger;
+import java.math.MathContext;
 import java.util.Arrays;
 
 import static org.firebirdsql.decimal.DenselyPackedDecimalCodec.BITS_PER_GROUP;
@@ -34,9 +35,9 @@ import static org.firebirdsql.decimal.DenselyPackedDecimalCodec.DIGITS_PER_GROUP
  */
 enum DecimalFormat {
 
-    Decimal32(32, 7),
-    Decimal64(64, 16),
-    Decimal128(128, 34);
+    Decimal32(32, 7, MathContext.DECIMAL32),
+    Decimal64(64, 16, MathContext.DECIMAL64),
+    Decimal128(128, 34, MathContext.DECIMAL128);
 
     private static final int SIGN_BITS = 1;
     private static final int COMBINATION_BITS = 5;
@@ -52,8 +53,10 @@ enum DecimalFormat {
     private final int exponentBias;
     private final BigInteger maxCoefficient;
     private final BigInteger minCoefficient;
+    private final MathContext mathContext;
 
-    DecimalFormat(int formatBitLength, int coefficientDigits) {
+    DecimalFormat(int formatBitLength, int coefficientDigits, MathContext mathContext) {
+        this.mathContext = mathContext;
         assert formatBitLength > 0 && formatBitLength % 8 == 0;
         this.formatBitLength = formatBitLength;
         formatByteLength = formatBitLength / 8;
@@ -68,6 +71,10 @@ enum DecimalFormat {
         Arrays.fill(digits, '9');
         maxCoefficient = new BigInteger(new String(digits));
         minCoefficient = maxCoefficient.negate();
+    }
+
+    final MathContext getMathContext() {
+        return mathContext;
     }
 
     final int biasedExponent(int unbiasedExponent) {
@@ -107,5 +114,4 @@ enum DecimalFormat {
     private static int calculateExponentLimit(int exponentContinuationBits) {
         return 3 * (1 << exponentContinuationBits) - 1;
     }
-
 }
