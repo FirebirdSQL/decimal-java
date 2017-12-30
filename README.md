@@ -10,6 +10,12 @@ License
 This library is licensed under the [MIT license](https://opensource.org/licenses/MIT),
 see also LICENSE.md.
 
+Status
+------
+
+At the moment, the API and underlying implementation is still in a state of 
+flux, this is expected to stabilize mid-January 2018.
+
 Goals
 -----
 
