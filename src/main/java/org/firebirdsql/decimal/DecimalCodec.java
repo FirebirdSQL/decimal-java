@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Firebird development team and individual contributors
+ * Copyright (c) 2018 Firebird development team and individual contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,16 +21,15 @@
  */
 package org.firebirdsql.decimal;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
-
-import static org.firebirdsql.decimal.SimpleDecimal.getSpecialConstant;
 
 /**
  * Encodes and decodes decimal values.
  *
  * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
  */
-final class DecimalCodec {
+final class DecimalCodec<T extends AbstractDecimal<T>> {
 
     /**
      * Byte pattern that signals that the combination field contains 1 bit of the first digit (for value 8 or 9).
@@ -38,35 +37,39 @@ final class DecimalCodec {
     private static final int COMBINATION_2 = 0b0_11000_00;
     private static final int NEGATIVE_BIT = 0b1000_0000;
 
+    private final DecimalFactory<T> decimalFactory;
     private final DecimalFormat decimalFormat;
     private final DenselyPackedDecimalCodec coefficientCoder;
 
     /**
-     * Constructs a decimal decoder.
+     * Constructs a decimal codec.
      *
-     * @param decimalFormat
-     *         Decimal format to use when encoding and decoding
+     * @param decimalFactory
+     *         Decimal factory to use when encoding and decoding
      */
-    DecimalCodec(DecimalFormat decimalFormat) {
-        this.decimalFormat = decimalFormat;
+    DecimalCodec(DecimalFactory<T> decimalFactory) {
+        this.decimalFactory = decimalFactory;
+        this.decimalFormat = decimalFactory.getDecimalFormat();
         coefficientCoder = new DenselyPackedDecimalCodec(decimalFormat.coefficientDigits);
     }
 
     /**
-     * Parse an IEEE-754 decimal format to a simple decimal.
+     * Parse an IEEE-754 decimal format to a decimal.
      *
      * @param decBytes
      *         byte representation
-     * @return Decoded simple decimal
+     * @return Decoded decimal
+     * @throws IllegalArgumentException
+     *         If the byte array has the wrong length for the decimal type of this codec
      */
-    SimpleDecimal parseBytes(final byte[] decBytes) {
+    T parseBytes(final byte[] decBytes) {
         decimalFormat.validateByteLength(decBytes);
 
         final int firstByte = decBytes[0] & 0xff;
         final int signum = -1 * (firstByte >>> 7) | 1;
         final DecimalType decimalType = DecimalType.fromFirstByte(firstByte);
         if (decimalType != DecimalType.NORMAL) {
-            return getSpecialConstant(decimalType, signum);
+            return decimalFactory.getSpecialConstant(signum, decimalType);
         } else {
             // NOTE: get exponent MSB from combination field and first 2 bits of exponent continuation in one go
             final int exponentMSB;
@@ -78,38 +81,38 @@ final class DecimalCodec {
                 exponentMSB = (firstByte >>> 1) & 0b01100 | (firstByte & 0b011);
                 firstDigit = 0b01000 | ((firstByte >>> 2) & 0b01);
             }
-            //System.out.printf("exponentMSB: %d, firstDigit: %d%n", exponentMSB, firstDigit);
             final int exponentBitsRemaining = decimalFormat.exponentContinuationBits - 2;
             assert exponentBitsRemaining
                     == decimalFormat.formatBitLength - 8 - decimalFormat.coefficientContinuationBits
                     : "Unexpected exponent remaining length " + exponentBitsRemaining;
             final int exponent =
                     decimalFormat.unbiasedExponent(decodeExponent(decBytes, exponentMSB, exponentBitsRemaining));
-            BigInteger coefficient = coefficientCoder.decodeValue(signum, firstDigit, decBytes);
+            final BigInteger coefficient = coefficientCoder.decodeValue(signum, firstDigit, decBytes);
 
-            //System.out.printf("exponentMSB: %d, exponent %d, firstDigit: %d%n", exponentMSB, exponent, firstDigit);
-            return new SimpleDecimal(signum, coefficient, exponent);
+            return decimalFactory.createDecimal(signum, new BigDecimal(coefficient, -exponent));
         }
     }
 
     /**
-     * Encodes a simple decimal to its IEEE-754 format.
+     * Encodes a decimal to its IEEE-754 format.
      *
      * @param decimal
-     *         Simple decimal
+     *         Decimal
      * @return Byte array with the encoded decimal
-     * @throws IllegalArgumentException
-     *         If the exponent or coefficient of the simple decimal exceeds the supported range of the decimal format
+     * @throws DecimalOverflowException
+     *         If the exponent or coefficient of the decimal exceeds the supported range of the decimal format
      */
-    byte[] encodeDecimal(final SimpleDecimal decimal) {
+    byte[] encodeDecimal(final T decimal) {
         final byte[] decBytes = new byte[decimalFormat.formatByteLength];
 
-        if (Signum.isNegative(decimal.getSignum())) {
+        if (decimal.signum() == Signum.NEGATIVE) {
             decBytes[0] = (byte) NEGATIVE_BIT;
         }
 
         if (decimal.getType() == DecimalType.NORMAL) {
-            encodeNormal(decimal, decBytes);
+            encodeNormal(
+                    decimalFormat.validate(decimal.toBigDecimal()),
+                    decBytes);
         } else {
             decBytes[0] |= decimal.getType().getSpecialBits();
         }
@@ -117,9 +120,9 @@ final class DecimalCodec {
         return decBytes;
     }
 
-    private void encodeNormal(SimpleDecimal decimal, byte[] decBytes) {
-        final int biasedExponent = decimalFormat.biasedExponent(decimal.validateExponent(decimalFormat));
-        final BigInteger coefficient = decimal.validateCoefficient(decimalFormat);
+    private void encodeNormal(BigDecimal decimal, byte[] decBytes) {
+        final int biasedExponent = decimalFormat.biasedExponent(-decimal.scale());
+        final BigInteger coefficient = decimal.unscaledValue();
         final int mostSignificantDigit = coefficientCoder.encodeValue(coefficient, decBytes);
         final int expMSB = biasedExponent >>> decimalFormat.exponentContinuationBits;
         final int expTwoBitCont = (biasedExponent >>> decimalFormat.exponentContinuationBits - 2) & 0b011;

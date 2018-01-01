@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Firebird development team and individual contributors
+ * Copyright (c) 2018 Firebird development team and individual contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,8 +23,6 @@ package org.firebirdsql.decimal;
 
 import java.math.BigDecimal;
 
-import static org.firebirdsql.decimal.Signum.NEGATIVE;
-
 /**
  * An IEEE-754 Decimal64.
  *
@@ -32,79 +30,85 @@ import static org.firebirdsql.decimal.Signum.NEGATIVE;
  */
 public final class Decimal64 extends AbstractDecimal<Decimal64> {
 
-    public static final Decimal64 POSITIVE_INFINITY = new Decimal64(SimpleDecimal.POSITIVE_INFINITY);
-    public static final Decimal64 NEGATIVE_INFINITY = new Decimal64(SimpleDecimal.NEGATIVE_INFINITY);
-    public static final Decimal64 POSITIVE_NAN = new Decimal64(SimpleDecimal.POSITIVE_NAN);
-    public static final Decimal64 NEGATIVE_NAN = new Decimal64(SimpleDecimal.NEGATIVE_NAN);
-    public static final Decimal64 POSITIVE_SIGNALING_NAN = new Decimal64(SimpleDecimal.POSITIVE_SIGNALING_NAN);
-    public static final Decimal64 NEGATIVE_SIGNALING_NAN = new Decimal64(SimpleDecimal.NEGATIVE_SIGNALING_NAN);
+    public static final Decimal64 POSITIVE_INFINITY = new Decimal64(Signum.POSITIVE, DecimalType.INFINITY);
+    public static final Decimal64 NEGATIVE_INFINITY = new Decimal64(Signum.NEGATIVE, DecimalType.INFINITY);
+    public static final Decimal64 POSITIVE_NAN = new Decimal64(Signum.POSITIVE, DecimalType.NAN);
+    public static final Decimal64 NEGATIVE_NAN = new Decimal64(Signum.NEGATIVE, DecimalType.NAN);
+    public static final Decimal64 POSITIVE_SIGNALING_NAN = new Decimal64(Signum.POSITIVE, DecimalType.SIGNALING_NAN);
+    public static final Decimal64 NEGATIVE_SIGNALING_NAN = new Decimal64(Signum.NEGATIVE, DecimalType.SIGNALING_NAN);
 
-    private static final DecimalCodec CODEC = new DecimalCodec(DecimalFormat.Decimal64);
+    private static final Decimal64Factory DECIMAL_64_FACTORY = new Decimal64Factory();
+    private static final DecimalCodec<Decimal64> DECIMAL_64_CODEC = new DecimalCodec<>(DECIMAL_64_FACTORY);
 
-    private Decimal64(SimpleDecimal value) {
-        super(value.rescaleAndValidate(DecimalFormat.Decimal64));
+    private Decimal64(int signum, DecimalType decimalType) {
+        super(signum, decimalType);
+    }
+
+    private Decimal64(int signum, BigDecimal bigDecimal) {
+        super(signum, bigDecimal);
     }
 
     @Override
-    Decimal64 negate() {
-        final DecimalType type = getType();
-        if (type == DecimalType.NORMAL) {
-            return new Decimal64(getValue().negate());
-        }
-        return getSpecialConstant(type, -1 * getSignum());
+    DecimalCodec<Decimal64> getDecimalCodec() {
+        return DECIMAL_64_CODEC;
     }
 
     @Override
-    DecimalCodec getDecimalCodec() {
-        return CODEC;
+    DecimalFactory<Decimal64> getDecimalFactory() {
+        return DECIMAL_64_FACTORY;
     }
 
     public static Decimal64 parseBytes(final byte[] decBytes) {
-        SimpleDecimal value = CODEC.parseBytes(decBytes);
-        final DecimalType decimalType = value.getType();
-        if (decimalType != DecimalType.NORMAL) {
-            return getSpecialConstant(decimalType, value.getSignum());
-        } else {
-            return new Decimal64(value);
-        }
+        return DECIMAL_64_CODEC.parseBytes(decBytes);
     }
 
     /**
-     * Creates a {@code Decimal64} from the provided {@code BigDecimal}.
+     * Creates a {@code Decimal64} from {@code value}, applying rounding where necessary.
+     * <p>
+     * Values exceeding the range of this type will be returned as +/-Infinity.
+     * </p>
      *
-     * @param bigDecimal
-     *         BigDecimal to convert
+     * @param value
+     *         Big decimal value to convert
      * @return Decimal64 equivalent
-     * @throws DecimalOverflowException
-     *         if the exponent ({@code -1 * scale}) or the coefficient is out of range
      */
-    public static Decimal64 valueOfExact(final BigDecimal bigDecimal) {
-        return new Decimal64(SimpleDecimal.valueOf(bigDecimal));
+    public static Decimal64 valueOf(final BigDecimal value) {
+        return DECIMAL_64_FACTORY.valueOf(value);
     }
 
-    static Decimal64 valueOf(SimpleDecimal simpleDecimal) {
-        return new Decimal64(simpleDecimal);
+    /**
+     * Creates a {@code Decimal64} from {@code value}, applying rounding where necessary.
+     * <p>
+     * Except for the special values [+/-]Inf, [+/-]Infinity, [+/-]NaN and [+/-]sNaN (case insensitive), the rules
+     * of {@link BigDecimal#BigDecimal(String)} apply, with special handling in place to discern between positive
+     * and negative zero.
+     * </p>
+     * <p>
+     * Values exceeding the range of this type will be returned as +/-Infinity.
+     * </p>
+     *
+     * @param value
+     *         String value to convert
+     * @return Decimal equivalent
+     */
+    public static Decimal64 valueOf(final String value) {
+        return DECIMAL_64_FACTORY.valueOf(value);
     }
 
-    private static Decimal64 getSpecialConstant(DecimalType decimalType, int signum) {
-        switch (decimalType) {
-        case INFINITY:
-            return signum == NEGATIVE
-                    ? NEGATIVE_INFINITY
-                    : POSITIVE_INFINITY;
+    private static class Decimal64Factory extends AbstractDecimalFactory<Decimal64> {
 
-        case NAN:
-            return signum == NEGATIVE
-                    ? NEGATIVE_NAN
-                    : POSITIVE_NAN;
-
-        case SIGNALING_NAN:
-            return signum == NEGATIVE
-                    ? NEGATIVE_SIGNALING_NAN
-                    : POSITIVE_SIGNALING_NAN;
-
-        default:
-            throw new AssertionError("Invalid special value for decimalType " + decimalType);
+        private Decimal64Factory() {
+            super(DecimalFormat.Decimal64,
+                    POSITIVE_INFINITY, NEGATIVE_INFINITY,
+                    POSITIVE_NAN, NEGATIVE_NAN,
+                    POSITIVE_SIGNALING_NAN, NEGATIVE_SIGNALING_NAN);
         }
+
+        @Override
+        public Decimal64 createDecimal(int signum, BigDecimal value) {
+            return new Decimal64(signum, validateRange(value));
+        }
+
     }
+
 }

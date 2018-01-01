@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Firebird development team and individual contributors
+ * Copyright (c) 2018 Firebird development team and individual contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,28 +23,53 @@ package org.firebirdsql.decimal;
 
 import org.junit.Test;
 
-import java.math.BigInteger;
+import java.math.BigDecimal;
 
 import static org.junit.Assert.assertEquals;
 
 public class Decimal128Test {
 
+    private static final Decimal128 POSITIVE_ZERO = Decimal128.valueOf(BigDecimal.ZERO);
+    private static final Decimal128 NEGATIVE_ZERO = POSITIVE_ZERO.negate();
+
+    @Test
+    public void validateConstant_POSITIVE_ZERO() {
+        assertEquals(BigDecimal.ZERO, POSITIVE_ZERO.toBigDecimal());
+        assertEquals(Signum.POSITIVE, POSITIVE_ZERO.signum());
+    }
+
+    @Test
+    public void validateConstant_NEGATIVE_ZERO() {
+        assertEquals(BigDecimal.ZERO, NEGATIVE_ZERO.toBigDecimal());
+        assertEquals(Signum.NEGATIVE, NEGATIVE_ZERO.signum());
+    }
+
     @Test
     public void negate_One() {
-        assertEquals(Decimal128.valueOf(new SimpleDecimal(BigInteger.valueOf(-1), 0)),
-                Decimal128.valueOf(new SimpleDecimal(BigInteger.ONE, 0)).negate());
+        Decimal128 negativeOne = Decimal128.valueOf(BigDecimal.ONE).negate();
+
+        assertEquals(Decimal128.valueOf(BigDecimal.ONE.negate()),
+                Decimal128.valueOf(BigDecimal.ONE).negate());
+        assertEquals(BigDecimal.ONE.negate(), negativeOne.toBigDecimal());
+        assertEquals(Signum.NEGATIVE, negativeOne.signum());
     }
 
     @Test
     public void negate_positiveZero() {
-        assertEquals(Decimal128.valueOf(new SimpleDecimal(Signum.NEGATIVE, BigInteger.ZERO, 0)),
-                Decimal128.valueOf(new SimpleDecimal(Signum.POSITIVE, BigInteger.ZERO, 0)).negate());
+        Decimal128 negativeZero = POSITIVE_ZERO.negate();
+
+        assertEquals(NEGATIVE_ZERO, negativeZero);
+        assertEquals(BigDecimal.ZERO, negativeZero.toBigDecimal());
+        assertEquals(Signum.NEGATIVE, negativeZero.signum());
     }
 
     @Test
     public void negate_negativeZero() {
-        assertEquals(Decimal128.valueOf(new SimpleDecimal(Signum.POSITIVE, BigInteger.ZERO, 0)),
-                Decimal128.valueOf(new SimpleDecimal(Signum.NEGATIVE, BigInteger.ZERO, 0)).negate());
+        Decimal128 positiveZero = NEGATIVE_ZERO.negate();
+
+        assertEquals(POSITIVE_ZERO, positiveZero);
+        assertEquals(BigDecimal.ZERO, positiveZero.toBigDecimal());
+        assertEquals(Signum.POSITIVE, positiveZero.signum());
     }
 
     @Test

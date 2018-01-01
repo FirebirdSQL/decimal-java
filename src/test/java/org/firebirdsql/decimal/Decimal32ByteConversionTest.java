@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Firebird development team and individual contributors
+ * Copyright (c) 2018 Firebird development team and individual contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -168,18 +168,18 @@ public class Decimal32ByteConversionTest {
                 testCase(null, "0E+96", "43f00000"),
                 testCase(null, "0E+400", "43f00000"),
                 // negative zeros
-                testCase("-0E-400", null, dec("0E-400").negate(), hexToBytes("80000000")),
-                testCase("-0E-101", hexToBytes("80000000"), dec("0E-101").negate()),
-                testCase("-0.000000E-95", null, dec("0.000000E-95").negate(), hexToBytes("80000000")),
-                testCase("-0E-2", hexToBytes("a2300000"), dec("0E-2").negate()),
-                testCase("-0.00", hexToBytes("a2300000"), dec("0.00").negate()),
-                testCase("-0", hexToBytes("a2500000"), dec("0").negate()),
-                testCase("-0E+3", hexToBytes("a2800000"), dec("0E+3").negate()),
-                testCase("-0E+90", hexToBytes("c3f00000"), dec("0E+90").negate()),
+                testCase(null, "-0E-400", "80000000"),
+                testCase("80000000", "-0E-101"),
+                testCase(null, "-0.000000E-95", "80000000"),
+                testCase("a2300000", "-0E-2"),
+                testCase("a2300000", "-0.00"),
+                testCase("a2500000", "-0"),
+                testCase("a2800000", "-0E+3"),
+                testCase("c3f00000", "-0E+90"),
                 // clamped zeros...
-                testCase("-0E+91", null, dec("0E+91").negate(), hexToBytes("c3f00000")),
-                testCase("-0E+96", null, dec("0E+96").negate(), hexToBytes("c3f00000")),
-                testCase("-0E+400", null, dec("0E+400").negate(), hexToBytes("c3f00000")),
+                testCase(null, "-0E+91", "c3f00000"),
+                testCase(null, "-0E+96", "c3f00000"),
+                testCase(null, "-0E+400", "c3f00000"),
                 //specials (may have overlap with earlier cases)
                 testCase("Infinity", hexToBytes("78000000"), Decimal32.POSITIVE_INFINITY),
                 testCase("Infinity", hexToBytes("78787878"), Decimal32.POSITIVE_INFINITY, hexToBytes("78000000")),
@@ -387,7 +387,6 @@ public class Decimal32ByteConversionTest {
     }
 
     private static Decimal32 dec(String decimalString) {
-        BigDecimal bigDecimal = new BigDecimal(decimalString);
-        return Decimal32.valueOfExact(bigDecimal);
+        return Decimal32.valueOf(decimalString);
     }
 }

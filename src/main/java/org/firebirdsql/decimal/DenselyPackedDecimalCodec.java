@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Firebird development team and individual contributors
+ * Copyright (c) 2018 Firebird development team and individual contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -475,7 +475,7 @@ public final class DenselyPackedDecimalCodec {
             return BigInteger.ZERO;
         }
 
-        if (Signum.isNegative(signum)) {
+        if (signum == Signum.NEGATIVE) {
             digitChars[--digitCharIndex] = '-';
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Firebird development team and individual contributors
+ * Copyright (c) 2018 Firebird development team and individual contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -197,19 +197,19 @@ public class Decimal64ByteConversionTest {
                 testCase(null, "0E+500", "43fc000000000000"),
                 // negative zeros
                 // clamped testcase doesn't work (implementation limit of dec test method; TODO Fix)
-                testCase("-0E-500", null, dec("0E-500").negate(), hexToBytes("8000000000000000")),
-                testCase("-0E-400", null, dec("0E-400").negate(), hexToBytes("8000000000000000")),
-                testCase("-0E-398", hexToBytes("8000000000000000"), dec("0E-398").negate()),
-                testCase("-0.000000000000000E-383", hexToBytes("8000000000000000"), dec("0.000000000000000E-383").negate()),
-                testCase("-0E-2", hexToBytes("a230000000000000"), dec("0E-2").negate()),
-                testCase("-0", hexToBytes("a238000000000000"), dec("0").negate()),
-                testCase("-0E+3", hexToBytes("a244000000000000"), dec("0E+3").negate()),
-                testCase("-0E+369", hexToBytes("c3fc000000000000"), dec("0E+369").negate()),
+                testCase(null, "-0E-500", "8000000000000000"),
+                testCase(null, "-0E-400", "8000000000000000"),
+                testCase("8000000000000000", "-0E-398"),
+                testCase("8000000000000000", "-0.000000000000000E-383"),
+                testCase("a230000000000000", "-0E-2"),
+                testCase("a238000000000000", "-0"),
+                testCase("a244000000000000", "-0E+3"),
+                testCase("c3fc000000000000", "-0E+369"),
                 // clamped zeros...
-                testCase("-0E+370", null, dec("0E+370").negate(), hexToBytes("c3fc000000000000")),
-                testCase("-0E+384", null, dec("0E+384").negate(), hexToBytes("c3fc000000000000")),
-                testCase("-0E+400", null, dec("0E+400").negate(), hexToBytes("c3fc000000000000")),
-                testCase("-0E+500", null, dec("0E+500").negate(), hexToBytes("c3fc000000000000")),
+                testCase(null, "-0E+370", "c3fc000000000000"),
+                testCase(null, "-0E+384", "c3fc000000000000"),
+                testCase(null, "-0E+400", "c3fc000000000000"),
+                testCase(null, "-0E+500", "c3fc000000000000"),
                 // exponents
                 testCase("225c000000000007", "7E+9"),
                 testCase("23c4000000000007", "7E+99"),
@@ -493,7 +493,6 @@ public class Decimal64ByteConversionTest {
     }
 
     private static Decimal64 dec(String decimalString) {
-        BigDecimal bigDecimal = new BigDecimal(decimalString);
-        return Decimal64.valueOfExact(bigDecimal);
+        return Decimal64.valueOf(decimalString);
     }
 }

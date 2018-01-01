@@ -22,17 +22,40 @@
 package org.firebirdsql.decimal;
 
 /**
- * Signum constants used in decimal-java
+ * Thrown to indicate a decimal value could not be converted to a target type (usually {@link java.math.BigDecimal}).
+ * <p>
+ * This exception should only be thrown for cases when the {@link DecimalType} other than {@link DecimalType#NORMAL}
+ * cannot be represented in the target type. That is, if the target type does not support Infinity and/or NaN.
+ * </p>
+ * <p>
+ * This exception should not be thrown for cases where the target type supports NaN, but does not support
+ * signalling NaN. In that situation, NaN should be returned.
+ * </p>
  *
  * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
  */
-public final class Signum {
+public class DecimalInconvertibleException extends RuntimeException {
 
-    public static final int POSITIVE = 1;
-    public static final int NEGATIVE = -1;
+    private final DecimalType decimalType;
+    private final int signum;
 
-    private Signum() {
-        // no instances
+    public DecimalInconvertibleException(String message, DecimalType decimalType, int signum) {
+        super(message);
+        this.decimalType = decimalType;
+        this.signum = signum;
     }
 
+    /**
+     * @return Decimal type of the value that could not be converted.
+     */
+    public DecimalType getDecimalType() {
+        return decimalType;
+    }
+
+    /**
+     * @return Signum of the value that could not be converted.
+     */
+    public int getSignum() {
+        return signum;
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Firebird development team and individual contributors
+ * Copyright (c) 2018 Firebird development team and individual contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,10 @@
  */
 package org.firebirdsql.decimal;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.Arrays;
 
 import static org.firebirdsql.decimal.DenselyPackedDecimalCodec.BITS_PER_GROUP;
@@ -75,6 +77,117 @@ enum DecimalFormat {
 
     final MathContext getMathContext() {
         return mathContext;
+    }
+
+    /**
+     * Attempts to round the provided value to fit the requirements of this decimal format.
+     * <p>
+     * The following steps are taken:
+     * </p>
+     * <ul>
+     * <li>the value is rounded to the precision required</li>
+     * <li>the value is rescaled to the scale boundaries if possible, for small values (out of range negative
+     * exponents) this may round to a value of zero</li>
+     * </ul>
+     * <p>
+     * The resulting value may still have a scale that is out of range for this decimal format,
+     * use {@link #isOutOfRange(BigDecimal)} after rounding to check if the value should be handled as
+     * {@code +/-Infinity} instead.
+     * </p>
+     *
+     * @param value
+     *         Big decimal value to round
+     * @return Big decimal value that may have been rounded to fit this decimal format, use
+     * {@link #isOutOfRange(BigDecimal)} to verify.
+     */
+    final BigDecimal tryRound(BigDecimal value) {
+        final BigDecimal roundedToPrecision = value.round(mathContext);
+        final int scaleAdjustment = requiredScaleAdjustment(roundedToPrecision);
+        if (scaleAdjustment == 0) {
+            return roundedToPrecision;
+        }
+        if (scaleAdjustment < 0) {
+            return roundedToPrecision
+                    .setScale(roundedToPrecision.scale() + scaleAdjustment, mathContext.getRoundingMode());
+        }
+        if (roundedToPrecision.compareTo(BigDecimal.ZERO) == 0
+                || scaleAdjustment <= coefficientDigits - roundedToPrecision.precision()) {
+            return roundedToPrecision
+                    .setScale(roundedToPrecision.scale() + scaleAdjustment, RoundingMode.UNNECESSARY);
+        }
+        return roundedToPrecision;
+    }
+
+    /**
+     * Validates if the precision and scale of the big decimal value fit the requirements of this decimal format.
+     *
+     * @param value
+     *         Big decimal value
+     * @return value if validation succeeded
+     * @throws DecimalOverflowException
+     *         If the precision of the value exceeds the maximum coefficient digits, or if the
+     *         scale is out of range
+     */
+    final BigDecimal validate(BigDecimal value) {
+        final int precision = value.precision();
+        if (precision > coefficientDigits) {
+            throw new DecimalOverflowException("Precision " + precision + " exceeds the maximum of "
+                    + coefficientDigits + " for this type");
+        }
+        if (requiredScaleAdjustment(value) != 0) {
+            throw new DecimalOverflowException("The scale " + value.scale() + " is out of range for this type");
+        }
+        return value;
+    }
+
+    /**
+     * Attempts rounding of the provided value, throwing an exception if the value is still out of range after rounding.
+     *
+     * @param value
+     *         Big decimal value
+     * @return Rounded value that meets the requirements of this decimal format.
+     * @throws DecimalOverflowException
+     *         If the value cannot be rounded to meet the requirements of this format.
+     * @see #tryRound(BigDecimal)
+     * @see #validate(BigDecimal)
+     */
+    final BigDecimal roundAndValidate(BigDecimal value) {
+        return validate(tryRound(value));
+    }
+
+    /**
+     * Checks if the current precision or scale of the provided value is out of range for this decimal format.
+     * <p>
+     * This method can be used to check if a big decimal should be handled as {@code +/-Infinity} after
+     * {@link #tryRound(BigDecimal)} has been applied.
+     * </p>
+     *
+     * @param value
+     *         Big decimal value
+     * @return {@code true} if {@code value} is out of range (precision or scale) for this decimal format
+     */
+    final boolean isOutOfRange(BigDecimal value) {
+        return value.precision() > coefficientDigits || requiredScaleAdjustment(value) != 0;
+    }
+
+    /**
+     * Scale adjustment needed to make the supplied big decimal value fit this decimal format.
+     *
+     * @param value
+     *         Big decimal value
+     * @return Scale adjustment (+/-), or {@code 0} if no adjustment is needed.
+     */
+    private int requiredScaleAdjustment(BigDecimal value) {
+        int biasedExponent = biasedExponent(-value.scale());
+        if (biasedExponent >= 0) {
+            if (biasedExponent <= eLimit) {
+                return 0;
+            } else {
+                return biasedExponent - eLimit;
+            }
+        } else {
+            return biasedExponent;
+        }
     }
 
     final int biasedExponent(int unbiasedExponent) {

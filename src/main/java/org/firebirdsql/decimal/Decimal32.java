@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Firebird development team and individual contributors
+ * Copyright (c) 2018 Firebird development team and individual contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,8 +23,6 @@ package org.firebirdsql.decimal;
 
 import java.math.BigDecimal;
 
-import static org.firebirdsql.decimal.Signum.NEGATIVE;
-
 /**
  * An IEEE-754 Decimal32.
  *
@@ -32,79 +30,85 @@ import static org.firebirdsql.decimal.Signum.NEGATIVE;
  */
 public final class Decimal32 extends AbstractDecimal<Decimal32> {
 
-    public static final Decimal32 POSITIVE_INFINITY = new Decimal32(SimpleDecimal.POSITIVE_INFINITY);
-    public static final Decimal32 NEGATIVE_INFINITY = new Decimal32(SimpleDecimal.NEGATIVE_INFINITY);
-    public static final Decimal32 POSITIVE_NAN = new Decimal32(SimpleDecimal.POSITIVE_NAN);
-    public static final Decimal32 NEGATIVE_NAN = new Decimal32(SimpleDecimal.NEGATIVE_NAN);
-    public static final Decimal32 POSITIVE_SIGNALING_NAN = new Decimal32(SimpleDecimal.POSITIVE_SIGNALING_NAN);
-    public static final Decimal32 NEGATIVE_SIGNALING_NAN = new Decimal32(SimpleDecimal.NEGATIVE_SIGNALING_NAN);
+    public static final Decimal32 POSITIVE_INFINITY = new Decimal32(Signum.POSITIVE, DecimalType.INFINITY);
+    public static final Decimal32 NEGATIVE_INFINITY = new Decimal32(Signum.NEGATIVE, DecimalType.INFINITY);
+    public static final Decimal32 POSITIVE_NAN = new Decimal32(Signum.POSITIVE, DecimalType.NAN);
+    public static final Decimal32 NEGATIVE_NAN = new Decimal32(Signum.NEGATIVE, DecimalType.NAN);
+    public static final Decimal32 POSITIVE_SIGNALING_NAN = new Decimal32(Signum.POSITIVE, DecimalType.SIGNALING_NAN);
+    public static final Decimal32 NEGATIVE_SIGNALING_NAN = new Decimal32(Signum.NEGATIVE, DecimalType.SIGNALING_NAN);
 
-    private static final DecimalCodec CODEC = new DecimalCodec(DecimalFormat.Decimal32);
+    private static final Decimal32Factory DECIMAL_32_FACTORY = new Decimal32Factory();
+    private static final DecimalCodec<Decimal32> DECIMAL_32_CODEC = new DecimalCodec<>(DECIMAL_32_FACTORY);
 
-    private Decimal32(SimpleDecimal value) {
-        super(value.rescaleAndValidate(DecimalFormat.Decimal32));
+    private Decimal32(int signum, DecimalType decimalType) {
+        super(signum, decimalType);
+    }
+
+    private Decimal32(int signum, BigDecimal bigDecimal) {
+        super(signum, bigDecimal);
     }
 
     @Override
-    Decimal32 negate() {
-        final DecimalType type = getType();
-        if (type == DecimalType.NORMAL) {
-            return new Decimal32(getValue().negate());
-        }
-        return getSpecialConstant(type, -1 * getSignum());
+    DecimalCodec<Decimal32> getDecimalCodec() {
+        return DECIMAL_32_CODEC;
     }
 
     @Override
-    DecimalCodec getDecimalCodec() {
-        return CODEC;
+    DecimalFactory<Decimal32> getDecimalFactory() {
+        return DECIMAL_32_FACTORY;
     }
 
     public static Decimal32 parseBytes(final byte[] decBytes) {
-        SimpleDecimal value = CODEC.parseBytes(decBytes);
-        final DecimalType decimalType = value.getType();
-        if (decimalType != DecimalType.NORMAL) {
-            return getSpecialConstant(decimalType, value.getSignum());
-        } else {
-            return new Decimal32(value);
-        }
+        return DECIMAL_32_CODEC.parseBytes(decBytes);
     }
 
     /**
-     * Creates a {@code Decimal32} from the provided {@code BigDecimal}.
+     * Creates a {@code Decimal32} from {@code value}, applying rounding where necessary.
+     * <p>
+     * Values exceeding the range of this type will be returned as +/-Infinity.
+     * </p>
      *
-     * @param bigDecimal
-     *         BigDecimal to convert
+     * @param value
+     *         Big decimal value to convert
      * @return Decimal32 equivalent
-     * @throws DecimalOverflowException
-     *         if the exponent ({@code -1 * scale}) or the coefficient is out of range
      */
-    public static Decimal32 valueOfExact(final BigDecimal bigDecimal) {
-        return new Decimal32(SimpleDecimal.valueOf(bigDecimal));
+    public static Decimal32 valueOf(final BigDecimal value) {
+        return DECIMAL_32_FACTORY.valueOf(value);
     }
 
-    static Decimal32 valueOf(SimpleDecimal simpleDecimal) {
-        return new Decimal32(simpleDecimal);
+    /**
+     * Creates a {@code Decimal32} from {@code value}, applying rounding where necessary.
+     * <p>
+     * Except for the special values [+/-]Inf, [+/-]Infinity, [+/-]NaN and [+/-]sNaN (case insensitive), the rules
+     * of {@link BigDecimal#BigDecimal(String)} apply, with special handling in place to discern between positive
+     * and negative zero.
+     * </p>
+     * <p>
+     * Values exceeding the range of this type will be returned as +/-Infinity.
+     * </p>
+     *
+     * @param value
+     *         String value to convert
+     * @return Decimal equivalent
+     */
+    public static Decimal32 valueOf(final String value) {
+        return DECIMAL_32_FACTORY.valueOf(value);
     }
 
-    private static Decimal32 getSpecialConstant(DecimalType decimalType, int signum) {
-        switch (decimalType) {
-        case INFINITY:
-            return signum == NEGATIVE
-                    ? NEGATIVE_INFINITY
-                    : POSITIVE_INFINITY;
+    private static class Decimal32Factory extends AbstractDecimalFactory<Decimal32> {
 
-        case NAN:
-            return signum == NEGATIVE
-                    ? NEGATIVE_NAN
-                    : POSITIVE_NAN;
-
-        case SIGNALING_NAN:
-            return signum == NEGATIVE
-                    ? NEGATIVE_SIGNALING_NAN
-                    : POSITIVE_SIGNALING_NAN;
-
-        default:
-            throw new AssertionError("Invalid special value for decimalType " + decimalType);
+        private Decimal32Factory() {
+            super(DecimalFormat.Decimal32,
+                    POSITIVE_INFINITY, NEGATIVE_INFINITY,
+                    POSITIVE_NAN, NEGATIVE_NAN,
+                    POSITIVE_SIGNALING_NAN, NEGATIVE_SIGNALING_NAN);
         }
+
+        @Override
+        public Decimal32 createDecimal(int signum, BigDecimal value) {
+            return new Decimal32(signum, validateRange(value));
+        }
+
     }
+
 }

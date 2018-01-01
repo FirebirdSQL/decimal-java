@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Firebird development team and individual contributors
+ * Copyright (c) 2018 Firebird development team and individual contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -186,21 +186,19 @@ public class Decimal128ByteConversionTest {
                 testCase(null, "0E+6144", "43ffc000000000000000000000000000"),
                 testCase(null, "0E+8000", "43ffc000000000000000000000000000"),
                 // negative zeros
-                testCase("-0E-8000", null, dec("0E-8000").negate(), hexToBytes("80000000000000000000000000000000")),
-                testCase("-0E-6177", null, dec("0E-6177").negate(), hexToBytes("80000000000000000000000000000000")),
-                testCase("-0E-6176", hexToBytes("80000000000000000000000000000000"), dec("0E-6176").negate()),
-                testCase("-0.000000000000000000000000000000000E-6143", null,
-                        dec("0.000000000000000000000000000000000E-6143").negate(),
-                        hexToBytes("80000000000000000000000000000000")),
-                testCase("-0E-2", null, dec("0E-2").negate(), hexToBytes("a2078000000000000000000000000000")),
-                testCase("-0.00", hexToBytes("a2078000000000000000000000000000"), dec("0.00").negate()),
-                testCase("-0", hexToBytes("a2080000000000000000000000000000"), dec("0").negate()),
-                testCase("-0E+3", hexToBytes("a208c000000000000000000000000000"), dec("-0E+3").negate()),
-                testCase("-0E+6111", hexToBytes("c3ffc000000000000000000000000000"), dec("-0E+6111").negate()),
+                testCase(null, "-0E-8000", "80000000000000000000000000000000"),
+                testCase(null, "-0E-6177", "80000000000000000000000000000000"),
+                testCase("80000000000000000000000000000000", "-0E-6176"),
+                testCase(null, "-0.000000000000000000000000000000000E-6143", "80000000000000000000000000000000"),
+                testCase(null, "-0E-2", "a2078000000000000000000000000000"),
+                testCase("a2078000000000000000000000000000", "-0.00"),
+                testCase("a2080000000000000000000000000000", "-0"),
+                testCase("a208c000000000000000000000000000", "-0E+3"),
+                testCase("c3ffc000000000000000000000000000", "-0E+6111"),
                 // clamped zeros...
-                testCase("-0E+6112", null, dec("0E+6112").negate(), hexToBytes("c3ffc000000000000000000000000000")),
-                testCase("-0E+6144", null, dec("0E+6144").negate(), hexToBytes("c3ffc000000000000000000000000000")),
-                testCase("-0E+8000", null, dec("0E+8000").negate(), hexToBytes("c3ffc000000000000000000000000000")),
+                testCase(null, "-0E+6112", "c3ffc000000000000000000000000000"),
+                testCase(null, "-0E+6144", "c3ffc000000000000000000000000000"),
+                testCase(null, "-0E+8000", "c3ffc000000000000000000000000000"),
                 // exponent lengths
                 testCase("22080000000000000000000000000007", "7"),
                 testCase("220a4000000000000000000000000007", "7E+9"),
@@ -507,7 +505,6 @@ public class Decimal128ByteConversionTest {
     }
 
     private static Decimal128 dec(String decimalString) {
-        BigDecimal bigDecimal = new BigDecimal(decimalString);
-        return Decimal128.valueOfExact(bigDecimal);
+        return Decimal128.valueOf(decimalString);
     }
 }

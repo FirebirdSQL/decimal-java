@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Firebird development team and individual contributors
+ * Copyright (c) 2018 Firebird development team and individual contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,25 +30,25 @@ public enum DecimalType {
 
     NORMAL {
         @Override
-        public int getSpecialBits() {
+        int getSpecialBits() {
             throw new IllegalStateException("Type NORMAL has no special bits");
         }
     },
     INFINITY {
         @Override
-        public int getSpecialBits() {
+        int getSpecialBits() {
             return INFINITY_0;
         }
     },
     NAN {
         @Override
-        public int getSpecialBits() {
+        int getSpecialBits() {
             return NAN_QUIET;
         }
     },
     SIGNALING_NAN {
         @Override
-        public int getSpecialBits() {
+        int getSpecialBits() {
             return NAN_SIGNAL;
         }
     };
@@ -64,12 +64,12 @@ public enum DecimalType {
      * @throws IllegalStateException
      *         If this is type NORMAL instead
      */
-    public abstract int getSpecialBits();
+    abstract int getSpecialBits();
 
     /**
      * @see #fromFirstByte(int)
      */
-    public static DecimalType fromFirstByte(byte firstByte) {
+    static DecimalType fromFirstByte(byte firstByte) {
         // Not masking lower bits, as it is not relevant due to masking in fromFirstByte(int)
         return fromFirstByte((int) firstByte);
     }
@@ -81,7 +81,7 @@ public enum DecimalType {
      *         First byte of the encoded decimal
      * @return Decimal type
      */
-    public static DecimalType fromFirstByte(int firstByte) {
+    static DecimalType fromFirstByte(int firstByte) {
         final int type = firstByte & TYPE_MASK;
         switch (type) {
         case INFINITY_0:
