@@ -141,21 +141,6 @@ enum DecimalFormat {
     }
 
     /**
-     * Attempts rounding of the provided value, throwing an exception if the value is still out of range after rounding.
-     *
-     * @param value
-     *         Big decimal value
-     * @return Rounded value that meets the requirements of this decimal format.
-     * @throws DecimalOverflowException
-     *         If the value cannot be rounded to meet the requirements of this format.
-     * @see #tryRound(BigDecimal)
-     * @see #validate(BigDecimal)
-     */
-    final BigDecimal roundAndValidate(BigDecimal value) {
-        return validate(tryRound(value));
-    }
-
-    /**
      * Checks if the current precision or scale of the provided value is out of range for this decimal format.
      * <p>
      * This method can be used to check if a big decimal should be handled as {@code +/-Infinity} after
@@ -210,10 +195,6 @@ enum DecimalFormat {
         if (decBytes.length != formatByteLength) {
             throw new IllegalArgumentException("decBytes argument must be " + formatByteLength + " bytes");
         }
-    }
-
-    final boolean isCoefficientInRange(BigInteger coefficient) {
-        return minCoefficient.compareTo(coefficient) > 0 || maxCoefficient.compareTo(coefficient) < 0;
     }
 
     private static int calculateCoefficientContinuationBits(int coefficientDigits) {

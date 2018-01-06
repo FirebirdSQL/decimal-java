@@ -28,7 +28,7 @@ import java.math.BigDecimal;
  *
  * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
  */
-public final class Decimal128 extends AbstractDecimal<Decimal128> {
+public final class Decimal128 extends Decimal<Decimal128> {
 
     public static final Decimal128 POSITIVE_INFINITY = new Decimal128(Signum.POSITIVE, DecimalType.INFINITY);
     public static final Decimal128 NEGATIVE_INFINITY = new Decimal128(Signum.NEGATIVE, DecimalType.INFINITY);
@@ -79,6 +79,41 @@ public final class Decimal128 extends AbstractDecimal<Decimal128> {
     /**
      * Creates a {@code Decimal128} from {@code value}, applying rounding where necessary.
      * <p>
+     * {@code Double.NaN} is mapped to positive NaN, the infinities to their equivalent +/- infinity.
+     * </p>
+     * <p>
+     * For normal values, this is equivalent to {@code valueOf(BigDecimal.valueOf(value))}.
+     * </p>
+     *
+     * @param value
+     *         Double value
+     * @return Decimal equivalent
+     */
+    public static Decimal128 valueOf(final double value) {
+        return DECIMAL_128_FACTORY.valueOf(value);
+    }
+
+    /**
+     * Converts a decimal to Decimal128.
+     * <p>
+     * For normal decimals, this behaves like {@code valueOf(decimal.toBigDecimal())}, see
+     * {@link #valueOf(BigDecimal)}.
+     * </p>
+     *
+     * @param decimal
+     *         Decimal to convert
+     * @return Decimal converted to Decimal128, or {@code decimal} itself if it already is Decimal128
+     */
+    public static Decimal128 valueOf(Decimal<?> decimal) {
+        if (decimal instanceof Decimal128) {
+            return (Decimal128) decimal;
+        }
+        return DECIMAL_128_FACTORY.valueOf(decimal);
+    }
+
+    /**
+     * Creates a {@code Decimal128} from {@code value}, applying rounding where necessary.
+     * <p>
      * Except for the special values [+/-]Inf, [+/-]Infinity, [+/-]NaN and [+/-]sNaN (case insensitive), the rules
      * of {@link BigDecimal#BigDecimal(String)} apply, with special handling in place to discern between positive
      * and negative zero.
@@ -98,7 +133,7 @@ public final class Decimal128 extends AbstractDecimal<Decimal128> {
     private static class Decimal128Factory extends AbstractDecimalFactory<Decimal128> {
 
         private Decimal128Factory() {
-            super(DecimalFormat.Decimal128,
+            super(Decimal128.class, DecimalFormat.Decimal128,
                     POSITIVE_INFINITY, NEGATIVE_INFINITY,
                     POSITIVE_NAN, NEGATIVE_NAN,
                     POSITIVE_SIGNALING_NAN, NEGATIVE_SIGNALING_NAN);

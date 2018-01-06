@@ -30,13 +30,13 @@ import static java.util.Objects.requireNonNull;
  *
  * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
  */
-abstract class AbstractDecimal<T extends AbstractDecimal<T>> {
+public abstract class Decimal<T extends Decimal<T>> {
 
     private final int signum;
     private final DecimalType type;
     private final BigDecimal bigDecimal;
 
-    AbstractDecimal(int signum, DecimalType type) {
+    Decimal(int signum, DecimalType type) {
         assert type != null : "Type should not be null";
         assert type != DecimalType.NORMAL : "Constructor only suitable for non-NORMAL";
         assert -1 == signum || signum == 1 : "Invalid signum, " + signum;
@@ -45,7 +45,7 @@ abstract class AbstractDecimal<T extends AbstractDecimal<T>> {
         bigDecimal = null;
     }
 
-    AbstractDecimal(int signum, BigDecimal bigDecimal) {
+    Decimal(int signum, BigDecimal bigDecimal) {
         assert -1 <= signum && signum <= 1 : "Invalid signum, " + signum;
         this.type = DecimalType.NORMAL;
         this.signum = signum != 0 ? signum : Signum.POSITIVE;
@@ -72,6 +72,36 @@ abstract class AbstractDecimal<T extends AbstractDecimal<T>> {
     }
 
     /**
+     * Converts this decimal to a double value.
+     * <p>
+     * For normal decimal values, see {@link BigDecimal#doubleValue()}.
+     * </p>
+     * <p>
+     * For type INFINITY, returns {@code Double.POSITIVE_INFINITY} or {@code Double.NEGATIVE_INFINITY}. For all
+     * NaN-specials, returns {@code Double.NaN} (irrespective of signum).
+     * </p>
+     *
+     * @return this decimal converted to a {@code double}
+     */
+    public final double doubleValue() {
+        switch (type) {
+        case NORMAL:
+            return bigDecimal.doubleValue();
+
+        case INFINITY:
+            return signum == Signum.NEGATIVE ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
+
+        case NAN:
+        case SIGNALING_NAN:
+            // No differentiation between positive/negative and signaling/normal
+            return Double.NaN;
+
+        default:
+            throw new IllegalStateException("Unsupported DecimalType " + type);
+        }
+    }
+
+    /**
      * Converts this decimal to its IEEE-754 byte encoding.
      *
      * @return byte array
@@ -79,6 +109,31 @@ abstract class AbstractDecimal<T extends AbstractDecimal<T>> {
     @SuppressWarnings("unchecked")
     public final byte[] toBytes() {
         return getDecimalCodec().encodeDecimal((T) this);
+    }
+
+    /**
+     * Converts this decimal to the requested decimal type, rounding when necessary.
+     *
+     * @param decimalType
+     *         Target decimal type
+     * @param <D>
+     *         Type parameter of decimal
+     * @return This value after conversion, or this if {@code decimalType} is the same as this type
+     * @throws IllegalArgumentException
+     *         If conversion to {@code decimalType} is not supported
+     */
+    public final <D extends Decimal<D>> D toDecimal(Class<D> decimalType) {
+        if (decimalType == getClass()) {
+            return decimalType.cast(this);
+        } else if (decimalType == Decimal128.class) {
+            return decimalType.cast(Decimal128.valueOf(this));
+        } else if (decimalType == Decimal64.class) {
+            return decimalType.cast(Decimal64.valueOf(this));
+        } else if (decimalType == Decimal32.class) {
+            return decimalType.cast(Decimal32.valueOf(this));
+        } else {
+            throw new IllegalArgumentException("Unsupported conversion to " + decimalType.getName());
+        }
     }
 
     final DecimalType getType() {
@@ -128,12 +183,16 @@ abstract class AbstractDecimal<T extends AbstractDecimal<T>> {
                 return "-" + bigDecimal.toString();
             }
             return bigDecimal.toString();
+
         case INFINITY:
             return signum == Signum.NEGATIVE ? "-Infinity" : "+Infinity";
+
         case NAN:
             return signum == Signum.NEGATIVE ? "-NaN" : "+NaN";
+
         case SIGNALING_NAN:
             return signum == Signum.NEGATIVE ? "-sNaN" : "+sNaN";
+
         default:
             throw new IllegalStateException("Unsupported DecimalType " + type);
         }
@@ -144,7 +203,7 @@ abstract class AbstractDecimal<T extends AbstractDecimal<T>> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        AbstractDecimal decimal = (AbstractDecimal) o;
+        Decimal decimal = (Decimal) o;
 
         if (signum != decimal.signum) return false;
         if (type != decimal.type) return false;
@@ -159,8 +218,9 @@ abstract class AbstractDecimal<T extends AbstractDecimal<T>> {
         return result;
     }
 
-    abstract static class AbstractDecimalFactory<T extends AbstractDecimal<T>> implements DecimalFactory<T> {
+    abstract static class AbstractDecimalFactory<T extends Decimal<T>> implements DecimalFactory<T> {
 
+        private final Class<T> type;
         private final DecimalFormat decimalFormat;
         private final T positiveInfinity;
         private final T negativeInfinity;
@@ -169,10 +229,11 @@ abstract class AbstractDecimal<T extends AbstractDecimal<T>> {
         private final T positiveSignalingNaN;
         private final T negativeSignalingNaN;
 
-        AbstractDecimalFactory(DecimalFormat decimalFormat,
+        AbstractDecimalFactory(Class<T> type, DecimalFormat decimalFormat,
                 T positiveInfinity, T negativeInfinity,
                 T positiveNan, T negativeNan,
                 T positiveSignalingNaN, T negativeSignalingNaN) {
+            this.type = type;
             this.decimalFormat = decimalFormat;
             this.positiveInfinity = positiveInfinity;
             this.negativeInfinity = negativeInfinity;
@@ -211,6 +272,52 @@ abstract class AbstractDecimal<T extends AbstractDecimal<T>> {
             }
             // Using value.signum() as rounding may round to zero, which would lose the signum information
             return createDecimal(value.signum(), roundedValue);
+        }
+
+        /**
+         * Creates a decimal from {@code value}, applying rounding where necessary.
+         * <p>
+         * {@code Double.NaN} is mapped to positive NaN, the infinities to their equivalent +/- infinity.
+         * </p>
+         * <p>
+         * For normal values, this is equivalent to {@code valueOf(BigDecimal.valueOf(value))}.
+         * </p>
+         *
+         * @param value
+         *         Double value
+         * @return Decimal equivalent
+         */
+        final T valueOf(double value) {
+            if (Double.isNaN(value)) {
+                return getSpecialConstant(Signum.POSITIVE, DecimalType.NAN);
+            } else if (value == Double.POSITIVE_INFINITY) {
+                return getSpecialConstant(Signum.POSITIVE, DecimalType.INFINITY);
+            } else if (value == Double.NEGATIVE_INFINITY) {
+                return getSpecialConstant(Signum.NEGATIVE, DecimalType.INFINITY);
+            }
+
+            return valueOf(BigDecimal.valueOf(value));
+        }
+
+        /**
+         * Converts a decimal to this type.
+         * <p>
+         * For normal decimals, this behaves like {@code valueOf(decimal.toBigDecimal())}, see
+         * {@link #valueOf(BigDecimal)}.
+         * </p>
+         *
+         * @param decimal
+         *         Decimal to convert
+         * @return Decimal converted to this type, or {@code decimal} itself if it already is of this type
+         */
+        final T valueOf(Decimal<?> decimal) {
+            if (decimal.getClass() == type) {
+                return type.cast(decimal);
+            } else if (decimal.type == DecimalType.NORMAL) {
+                return valueOf(decimal.bigDecimal);
+            } else {
+                return getSpecialConstant(decimal.signum, decimal.type);
+            }
         }
 
         /**
@@ -257,19 +364,25 @@ abstract class AbstractDecimal<T extends AbstractDecimal<T>> {
             case "+inf":
             case "+infinity":
                 return getSpecialConstant(Signum.POSITIVE, DecimalType.INFINITY);
+
             case "-inf":
             case "-infinity":
                 return getSpecialConstant(Signum.NEGATIVE, DecimalType.INFINITY);
+
             case "nan":
             case "+nan":
                 return getSpecialConstant(Signum.POSITIVE, DecimalType.NAN);
+
             case "-nan":
                 return getSpecialConstant(Signum.NEGATIVE, DecimalType.NAN);
+
             case "snan":
             case "+snan":
                 return getSpecialConstant(Signum.POSITIVE, DecimalType.SIGNALING_NAN);
+
             case "-snan":
                 return getSpecialConstant(Signum.NEGATIVE, DecimalType.SIGNALING_NAN);
+
             default:
                 throw new NumberFormatException("Invalid value " + special);
             }

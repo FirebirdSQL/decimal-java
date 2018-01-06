@@ -28,7 +28,7 @@ import java.math.BigDecimal;
  *
  * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
  */
-public final class Decimal64 extends AbstractDecimal<Decimal64> {
+public final class Decimal64 extends Decimal<Decimal64> {
 
     public static final Decimal64 POSITIVE_INFINITY = new Decimal64(Signum.POSITIVE, DecimalType.INFINITY);
     public static final Decimal64 NEGATIVE_INFINITY = new Decimal64(Signum.NEGATIVE, DecimalType.INFINITY);
@@ -79,6 +79,41 @@ public final class Decimal64 extends AbstractDecimal<Decimal64> {
     /**
      * Creates a {@code Decimal64} from {@code value}, applying rounding where necessary.
      * <p>
+     * {@code Double.NaN} is mapped to positive NaN, the infinities to their equivalent +/- infinity.
+     * </p>
+     * <p>
+     * For normal values, this is equivalent to {@code valueOf(BigDecimal.valueOf(value))}.
+     * </p>
+     *
+     * @param value
+     *         Double value
+     * @return Decimal equivalent
+     */
+    public static Decimal64 valueOf(final double value) {
+        return DECIMAL_64_FACTORY.valueOf(value);
+    }
+
+    /**
+     * Converts a decimal to Decimal64.
+     * <p>
+     * For normal decimals, this behaves like {@code valueOf(decimal.toBigDecimal())}, see
+     * {@link #valueOf(BigDecimal)}.
+     * </p>
+     *
+     * @param decimal
+     *         Decimal to convert
+     * @return Decimal converted to Decimal64, or {@code decimal} itself if it already is Decimal64
+     */
+    public static Decimal64 valueOf(Decimal<?> decimal) {
+        if (decimal instanceof Decimal64) {
+            return (Decimal64) decimal;
+        }
+        return DECIMAL_64_FACTORY.valueOf(decimal);
+    }
+
+    /**
+     * Creates a {@code Decimal64} from {@code value}, applying rounding where necessary.
+     * <p>
      * Except for the special values [+/-]Inf, [+/-]Infinity, [+/-]NaN and [+/-]sNaN (case insensitive), the rules
      * of {@link BigDecimal#BigDecimal(String)} apply, with special handling in place to discern between positive
      * and negative zero.
@@ -98,7 +133,7 @@ public final class Decimal64 extends AbstractDecimal<Decimal64> {
     private static class Decimal64Factory extends AbstractDecimalFactory<Decimal64> {
 
         private Decimal64Factory() {
-            super(DecimalFormat.Decimal64,
+            super(Decimal64.class, DecimalFormat.Decimal64,
                     POSITIVE_INFINITY, NEGATIVE_INFINITY,
                     POSITIVE_NAN, NEGATIVE_NAN,
                     POSITIVE_SIGNALING_NAN, NEGATIVE_SIGNALING_NAN);

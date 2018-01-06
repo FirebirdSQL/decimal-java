@@ -28,7 +28,7 @@ import java.math.BigDecimal;
  *
  * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
  */
-public final class Decimal32 extends AbstractDecimal<Decimal32> {
+public final class Decimal32 extends Decimal<Decimal32> {
 
     public static final Decimal32 POSITIVE_INFINITY = new Decimal32(Signum.POSITIVE, DecimalType.INFINITY);
     public static final Decimal32 NEGATIVE_INFINITY = new Decimal32(Signum.NEGATIVE, DecimalType.INFINITY);
@@ -79,6 +79,41 @@ public final class Decimal32 extends AbstractDecimal<Decimal32> {
     /**
      * Creates a {@code Decimal32} from {@code value}, applying rounding where necessary.
      * <p>
+     * {@code Double.NaN} is mapped to positive NaN, the infinities to their equivalent +/- infinity.
+     * </p>
+     * <p>
+     * For normal values, this is equivalent to {@code valueOf(BigDecimal.valueOf(value))}.
+     * </p>
+     *
+     * @param value
+     *         Double value
+     * @return Decimal equivalent
+     */
+    public static Decimal32 valueOf(final double value) {
+        return DECIMAL_32_FACTORY.valueOf(value);
+    }
+
+    /**
+     * Converts a decimal to Decimal32.
+     * <p>
+     * For normal decimals, this behaves like {@code valueOf(decimal.toBigDecimal())}, see
+     * {@link #valueOf(BigDecimal)}.
+     * </p>
+     *
+     * @param decimal
+     *         Decimal to convert
+     * @return Decimal converted to Decimal32, or {@code decimal} itself if it already is Decimal32
+     */
+    public static Decimal32 valueOf(Decimal<?> decimal) {
+        if (decimal instanceof Decimal32) {
+            return (Decimal32) decimal;
+        }
+        return DECIMAL_32_FACTORY.valueOf(decimal);
+    }
+
+    /**
+     * Creates a {@code Decimal32} from {@code value}, applying rounding where necessary.
+     * <p>
      * Except for the special values [+/-]Inf, [+/-]Infinity, [+/-]NaN and [+/-]sNaN (case insensitive), the rules
      * of {@link BigDecimal#BigDecimal(String)} apply, with special handling in place to discern between positive
      * and negative zero.
@@ -98,7 +133,7 @@ public final class Decimal32 extends AbstractDecimal<Decimal32> {
     private static class Decimal32Factory extends AbstractDecimalFactory<Decimal32> {
 
         private Decimal32Factory() {
-            super(DecimalFormat.Decimal32,
+            super(Decimal32.class, DecimalFormat.Decimal32,
                     POSITIVE_INFINITY, NEGATIVE_INFINITY,
                     POSITIVE_NAN, NEGATIVE_NAN,
                     POSITIVE_SIGNALING_NAN, NEGATIVE_SIGNALING_NAN);

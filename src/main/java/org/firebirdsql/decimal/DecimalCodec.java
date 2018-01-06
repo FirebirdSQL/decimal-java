@@ -29,7 +29,7 @@ import java.math.BigInteger;
  *
  * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
  */
-final class DecimalCodec<T extends AbstractDecimal<T>> {
+final class DecimalCodec<T extends Decimal<T>> {
 
     /**
      * Byte pattern that signals that the combination field contains 1 bit of the first digit (for value 8 or 9).
