@@ -21,7 +21,9 @@
  */
 package org.firebirdsql.decimal;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -29,6 +31,9 @@ import java.util.Arrays;
 import static org.junit.Assert.*;
 
 public class Decimal128Test {
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     private static final Decimal128 POSITIVE_ZERO = Decimal128.valueOf(BigDecimal.ZERO);
     private static final Decimal128 NEGATIVE_ZERO = POSITIVE_ZERO.negate();
@@ -188,6 +193,12 @@ public class Decimal128Test {
     }
 
     @Test
+    public void valueOf_doubleMax_noOverflow() {
+        assertEquals(Decimal128.valueOf("1.7976931348623157E+308"),
+                Decimal128.valueOf(Double.MAX_VALUE, OverflowHandling.THROW_EXCEPTION));
+    }
+
+    @Test
     public void valueOf_doublePositiveInfinity() {
         assertSame(Decimal128.POSITIVE_INFINITY, Decimal128.valueOf(Double.POSITIVE_INFINITY));
     }
@@ -200,6 +211,24 @@ public class Decimal128Test {
     @Test
     public void valueOf_doubleNaN() {
         assertSame(Decimal128.POSITIVE_NAN, Decimal128.valueOf(Double.NaN));
+    }
+
+    @Test
+    public void valueOf_stringOutOfRange_toPositiveInfinity() {
+        assertSame(Decimal128.POSITIVE_INFINITY, Decimal128.valueOf("9.9E10000"));
+    }
+
+    @Test
+    public void valueOf_stringOutOfRange_toNegativeInfinity() {
+        assertSame(Decimal128.NEGATIVE_INFINITY, Decimal128.valueOf("-9.9E10000"));
+    }
+
+    @Test
+    public void valueOf_stringOutOfRange_throwException() {
+        expectedException.expect(DecimalOverflowException.class);
+        expectedException.expectMessage("The scale -9999 is out of range for this type");
+
+        Decimal128.valueOf("9.9E10000", OverflowHandling.THROW_EXCEPTION);
     }
 
     @Test

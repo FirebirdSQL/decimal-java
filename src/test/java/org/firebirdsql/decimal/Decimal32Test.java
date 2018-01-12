@@ -21,7 +21,9 @@
  */
 package org.firebirdsql.decimal;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -29,6 +31,9 @@ import java.util.Arrays;
 import static org.junit.Assert.*;
 
 public class Decimal32Test {
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     private static final Decimal32 POSITIVE_ZERO = Decimal32.valueOf(BigDecimal.ZERO);
     private static final Decimal32 NEGATIVE_ZERO = POSITIVE_ZERO.negate();
@@ -96,10 +101,28 @@ public class Decimal32Test {
     }
 
     @Test
+    public void valueOf_Decimal64_overflow_ThrowException() {
+        Decimal64 decimal64Value = Decimal64.valueOf("1E300");
+        expectedException.expect(DecimalOverflowException.class);
+        expectedException.expectMessage("The scale -300 is out of range for this type");
+
+        Decimal32.valueOf(decimal64Value, OverflowHandling.THROW_EXCEPTION);
+    }
+
+    @Test
     public void valueOf_Decimal128_overflowToInfinity() {
         Decimal128 decimal128Value = Decimal128.valueOf("1E6000");
 
         assertEquals(Decimal32.POSITIVE_INFINITY, Decimal32.valueOf(decimal128Value));
+    }
+
+    @Test
+    public void valueOf_Decimal128_overflow_ThrowException() {
+        Decimal128 decimal128Value = Decimal128.valueOf("1E6000");
+        expectedException.expect(DecimalOverflowException.class);
+        expectedException.expectMessage("The scale -6000 is out of range for this type");
+
+        Decimal32.valueOf(decimal128Value, OverflowHandling.THROW_EXCEPTION);
     }
 
     @Test
@@ -198,6 +221,37 @@ public class Decimal32Test {
     @Test
     public void valueOf_doubleNaN() {
         assertSame(Decimal32.POSITIVE_NAN, Decimal32.valueOf(Double.NaN));
+    }
+
+    @Test
+    public void valueOf_doubleMax_OverflowToInfinity() {
+        assertEquals(Decimal32.POSITIVE_INFINITY, Decimal32.valueOf(Double.MAX_VALUE));
+    }
+
+    @Test
+    public void valueOf_doubleMax_Overflow_ThrowException() {
+        expectedException.expect(DecimalOverflowException.class);
+        expectedException.expectMessage("The scale -302 is out of range for this type");
+
+        Decimal32.valueOf(Double.MAX_VALUE, OverflowHandling.THROW_EXCEPTION);
+    }
+
+    @Test
+    public void valueOf_stringOutOfRange_toPositiveInfinity() {
+        assertSame(Decimal32.POSITIVE_INFINITY, Decimal32.valueOf("9.9E10000"));
+    }
+
+    @Test
+    public void valueOf_stringOutOfRange_toNegativeInfinity() {
+        assertSame(Decimal32.NEGATIVE_INFINITY, Decimal32.valueOf("-9.9E10000"));
+    }
+
+    @Test
+    public void valueOf_stringOutOfRange_throwException() {
+        expectedException.expect(DecimalOverflowException.class);
+        expectedException.expectMessage("The scale -9999 is out of range for this type");
+
+        Decimal32.valueOf("9.9E10000", OverflowHandling.THROW_EXCEPTION);
     }
 
     @Test

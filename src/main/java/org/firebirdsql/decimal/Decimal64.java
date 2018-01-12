@@ -73,7 +73,25 @@ public final class Decimal64 extends Decimal<Decimal64> {
      * @return Decimal64 equivalent
      */
     public static Decimal64 valueOf(final BigDecimal value) {
-        return DECIMAL_64_FACTORY.valueOf(value);
+        return valueOf(value, OverflowHandling.ROUND_TO_INFINITY);
+    }
+
+    /**
+     * Creates a {@code Decimal64} from {@code value}, applying rounding where necessary.
+     * <p>
+     * Values exceeding the range of this type will be handled according to the specified overflow handling.
+     * </p>
+     *
+     * @param value
+     *         Big decimal value to convert
+     * @param overflowHandling
+     *         Overflow handling to apply
+     * @return Decimal64 equivalent
+     * @throws DecimalOverflowException
+     *         If {@code OverflowHandling#THROW_EXCEPTION} and the value is out of range.
+     */
+    public static Decimal64 valueOf(final BigDecimal value, final OverflowHandling overflowHandling) {
+        return DECIMAL_64_FACTORY.valueOf(value, overflowHandling);
     }
 
     /**
@@ -90,7 +108,28 @@ public final class Decimal64 extends Decimal<Decimal64> {
      * @return Decimal equivalent
      */
     public static Decimal64 valueOf(final double value) {
-        return DECIMAL_64_FACTORY.valueOf(value);
+        return valueOf(value, OverflowHandling.ROUND_TO_INFINITY);
+    }
+
+    /**
+     * Creates a {@code Decimal64} from {@code value}, applying rounding where necessary.
+     * <p>
+     * {@code Double.NaN} is mapped to positive NaN, the infinities to their equivalent +/- infinity.
+     * </p>
+     * <p>
+     * For normal, finite, values, this is equivalent to {@code valueOf(BigDecimal.valueOf(value), overflowHandling)}.
+     * </p>
+     *
+     * @param value
+     *         Double value
+     * @param overflowHandling
+     *         Overflow handling to apply
+     * @return Decimal equivalent
+     * @throws DecimalOverflowException
+     *         If {@code OverflowHandling#THROW_EXCEPTION} and the value is out of range.
+     */
+    public static Decimal64 valueOf(final double value, final OverflowHandling overflowHandling) {
+        return DECIMAL_64_FACTORY.valueOf(value, overflowHandling);
     }
 
     /**
@@ -105,10 +144,29 @@ public final class Decimal64 extends Decimal<Decimal64> {
      * @return Decimal converted to Decimal64, or {@code decimal} itself if it already is Decimal64
      */
     public static Decimal64 valueOf(Decimal<?> decimal) {
+        return valueOf(decimal, OverflowHandling.ROUND_TO_INFINITY);
+    }
+
+    /**
+     * Converts a decimal to Decimal64.
+     * <p>
+     * For normal, finite, decimals, this behaves like {@code valueOf(decimal.toBigDecimal(), overflowHandling)}, see
+     * {@link #valueOf(BigDecimal, OverflowHandling)}.
+     * </p>
+     *
+     * @param decimal
+     *         Decimal to convert
+     * @param overflowHandling
+     *         Overflow handling to apply
+     * @return Decimal converted to Decimal64, or {@code decimal} itself if it already is Decimal64
+     * @throws DecimalOverflowException
+     *         If {@code OverflowHandling#THROW_EXCEPTION} and the value is out of range.
+     */
+    public static Decimal64 valueOf(Decimal<?> decimal, OverflowHandling overflowHandling) {
         if (decimal instanceof Decimal64) {
             return (Decimal64) decimal;
         }
-        return DECIMAL_64_FACTORY.valueOf(decimal);
+        return DECIMAL_64_FACTORY.valueOf(decimal, overflowHandling);
     }
 
     /**
@@ -125,9 +183,36 @@ public final class Decimal64 extends Decimal<Decimal64> {
      * @param value
      *         String value to convert
      * @return Decimal equivalent
+     * @throws NumberFormatException
+     *         If the provided string is not valid numeric string.
      */
     public static Decimal64 valueOf(final String value) {
-        return DECIMAL_64_FACTORY.valueOf(value);
+        return valueOf(value, OverflowHandling.ROUND_TO_INFINITY);
+    }
+
+    /**
+     * Creates a {@code Decimal64} from {@code value}, applying rounding where necessary.
+     * <p>
+     * Except for the special values [+/-]Inf, [+/-]Infinity, [+/-]NaN and [+/-]sNaN (case insensitive), the rules
+     * of {@link BigDecimal#BigDecimal(String)} apply, with special handling in place to discern between positive
+     * and negative zero.
+     * </p>
+     * <p>
+     * Values exceeding the range of this type will be handled according to the specified overflow handling.
+     * </p>
+     *
+     * @param value
+     *         String value to convert
+     * @param overflowHandling
+     *         Overflow handling to apply
+     * @return Decimal equivalent
+     * @throws NumberFormatException
+     *         If the provided string is not valid numeric string.
+     * @throws DecimalOverflowException
+     *         If {@code OverflowHandling#THROW_EXCEPTION} and the value is out of range.
+     */
+    public static Decimal64 valueOf(final String value, final OverflowHandling overflowHandling) {
+        return DECIMAL_64_FACTORY.valueOf(value, overflowHandling);
     }
 
     private static class Decimal64Factory extends AbstractDecimalFactory<Decimal64> {

@@ -258,18 +258,23 @@ public abstract class Decimal<T extends Decimal<T>> {
         /**
          * Creates a decimal from {@code value}, applying rounding where necessary.
          * <p>
-         * Values exceeding the range of this type will be returned as +/-Infinity.
+         * Values exceeding the range of this type will be handled according to the specified overflow handling.
          * </p>
          *
          * @param value
          *         Big decimal value to convert
+         * @param overflowHandling
+         *         Handling of overflows
          * @return Decimal equivalent
+         * @throws DecimalOverflowException
+         *         If {@code OverflowHandling#THROW_EXCEPTION} and the value is out of range.
          */
-        final T valueOf(BigDecimal value) {
+        final T valueOf(BigDecimal value, OverflowHandling overflowHandling) {
             final BigDecimal roundedValue = decimalFormat.tryRound(value);
-            if (decimalFormat.isOutOfRange(roundedValue)) {
+            if (overflowHandling == OverflowHandling.ROUND_TO_INFINITY && decimalFormat.isOutOfRange(roundedValue)) {
                 return getSpecialConstant(roundedValue.signum(), DecimalType.INFINITY);
             }
+            // OverflowHandling.THROW_EXCEPTION is handled implicitly in createDecimal
             // Using value.signum() as rounding may round to zero, which would lose the signum information
             return createDecimal(value.signum(), roundedValue);
         }
@@ -280,14 +285,18 @@ public abstract class Decimal<T extends Decimal<T>> {
          * {@code Double.NaN} is mapped to positive NaN, the infinities to their equivalent +/- infinity.
          * </p>
          * <p>
-         * For normal, finite, values, this is equivalent to {@code valueOf(BigDecimal.valueOf(value))}.
+         * For normal, finite, values, this is equivalent to {@code valueOf(BigDecimal.valueOf(value), overflowHandling)}.
          * </p>
          *
          * @param value
          *         Double value
+         * @param overflowHandling
+         *         Handling of overflows
          * @return Decimal equivalent
+         * @throws DecimalOverflowException
+         *         If {@code OverflowHandling#THROW_EXCEPTION} and the value is out of range.
          */
-        final T valueOf(double value) {
+        final T valueOf(double value, OverflowHandling overflowHandling) {
             if (Double.isNaN(value)) {
                 return getSpecialConstant(Signum.POSITIVE, DecimalType.NAN);
             } else if (value == Double.POSITIVE_INFINITY) {
@@ -296,25 +305,29 @@ public abstract class Decimal<T extends Decimal<T>> {
                 return getSpecialConstant(Signum.NEGATIVE, DecimalType.INFINITY);
             }
 
-            return valueOf(BigDecimal.valueOf(value));
+            return valueOf(BigDecimal.valueOf(value), overflowHandling);
         }
 
         /**
          * Converts a decimal to this type.
          * <p>
-         * For normal, finite, decimals, this behaves like {@code valueOf(decimal.toBigDecimal())}, see
-         * {@link #valueOf(BigDecimal)}.
+         * For normal, finite, decimals, this behaves like {@code valueOf(decimal.toBigDecimal(), overflowHandling)}, see
+         * {@link #valueOf(BigDecimal, OverflowHandling)}.
          * </p>
          *
          * @param decimal
          *         Decimal to convert
+         * @param overflowHandling
+         *         Handling of overflows
          * @return Decimal converted to this type, or {@code decimal} itself if it already is of this type
+         * @throws DecimalOverflowException
+         *         If {@code OverflowHandling#THROW_EXCEPTION} and the value is out of range.
          */
-        final T valueOf(Decimal<?> decimal) {
+        final T valueOf(Decimal<?> decimal, OverflowHandling overflowHandling) {
             if (decimal.getClass() == type) {
                 return type.cast(decimal);
             } else if (decimal.type == DecimalType.FINITE) {
-                return valueOf(decimal.bigDecimal);
+                return valueOf(decimal.bigDecimal, overflowHandling);
             } else {
                 return getSpecialConstant(decimal.signum, decimal.type);
             }
@@ -328,14 +341,20 @@ public abstract class Decimal<T extends Decimal<T>> {
          * and negative zero.
          * </p>
          * <p>
-         * Values exceeding the range of this type will be returned as +/-Infinity.
+         * Values exceeding the range of this type will be handled according to the specified overflow handling.
          * </p>
          *
          * @param value
          *         String value to convert
+         * @param overflowHandling
+         *         Handling of overflows
          * @return Decimal equivalent
+         * @throws NumberFormatException
+         *         If the provided string is not valid numeric string.
+         * @throws DecimalOverflowException
+         *         If {@code OverflowHandling#THROW_EXCEPTION} and the value is out of range.
          */
-        final T valueOf(String value) {
+        final T valueOf(String value, OverflowHandling overflowHandling) {
             if (value.length() > 2) {
                 char checkChar = value.charAt(0);
                 if (checkChar == '+' || checkChar == '-') {
@@ -348,7 +367,7 @@ public abstract class Decimal<T extends Decimal<T>> {
                 }
             }
             BigDecimal bdValue = new BigDecimal(value);
-            T decimalValue = valueOf(bdValue);
+            T decimalValue = valueOf(bdValue, overflowHandling);
             if (decimalValue.isEquivalentToZero()
                     && value.charAt(0) == '-'
                     && bdValue.signum() != Signum.NEGATIVE) {
