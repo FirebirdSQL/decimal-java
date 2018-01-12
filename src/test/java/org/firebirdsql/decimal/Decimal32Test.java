@@ -131,7 +131,7 @@ public class Decimal32Test {
     }
 
     @Test
-    public void toBigDecimal_normalValue() {
+    public void toBigDecimal_finiteValue() {
         String decimalString = "1.23456E10";
         Decimal32 decimal32Value = Decimal32.valueOf(decimalString);
         BigDecimal bigDecimalValue = new BigDecimal(decimalString);
@@ -155,7 +155,7 @@ public class Decimal32Test {
     }
 
     @Test
-    public void doubleValue_normalValue() {
+    public void doubleValue_finiteValue() {
         String decimalString = "1.23456E10";
         Decimal32 decimal32Value = Decimal32.valueOf(decimalString);
 
@@ -181,7 +181,7 @@ public class Decimal32Test {
     }
 
     @Test
-    public void valueOf_normalDouble() {
+    public void valueOf_finiteDouble() {
         assertEquals(Decimal32.valueOf("1.23456"), Decimal32.valueOf(1.23456));
     }
 

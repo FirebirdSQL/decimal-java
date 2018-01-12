@@ -28,10 +28,10 @@ package org.firebirdsql.decimal;
  */
 public enum DecimalType {
 
-    NORMAL {
+    FINITE {
         @Override
         int getSpecialBits() {
-            throw new IllegalStateException("Type NORMAL has no special bits");
+            throw new IllegalStateException("Type FINITE has no special bits");
         }
     },
     INFINITY {
@@ -62,7 +62,7 @@ public enum DecimalType {
     /**
      * @return Bit combination of this special.
      * @throws IllegalStateException
-     *         If this is type NORMAL instead
+     *         If this is type FINITE instead
      */
     abstract int getSpecialBits();
 
@@ -96,7 +96,7 @@ public enum DecimalType {
 
         default:
             assert (firstByte & 0b0_11110_00) != 0b0_11110_00 : "Invalid special " + firstByte;
-            return NORMAL;
+            return FINITE;
         }
     }
 

@@ -132,7 +132,7 @@ public class Decimal64Test {
     }
 
     @Test
-    public void toBigDecimal_normalValue() {
+    public void toBigDecimal_finiteValue() {
         String decimalString = "1.23456E10";
         Decimal64 decimal64Value = Decimal64.valueOf(decimalString);
         BigDecimal bigDecimalValue = new BigDecimal(decimalString);
@@ -156,7 +156,7 @@ public class Decimal64Test {
     }
 
     @Test
-    public void doubleValue_normalValue() {
+    public void doubleValue_finiteValue() {
         String decimalString = "1.23456E10";
         Decimal64 decimal64Value = Decimal64.valueOf(decimalString);
 
@@ -182,7 +182,7 @@ public class Decimal64Test {
     }
 
     @Test
-    public void valueOf_normalDouble() {
+    public void valueOf_finiteDouble() {
         assertEquals(Decimal64.valueOf("1.23456"), Decimal64.valueOf(1.23456));
     }
 

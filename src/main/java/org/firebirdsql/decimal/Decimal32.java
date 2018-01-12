@@ -82,7 +82,7 @@ public final class Decimal32 extends Decimal<Decimal32> {
      * {@code Double.NaN} is mapped to positive NaN, the infinities to their equivalent +/- infinity.
      * </p>
      * <p>
-     * For normal values, this is equivalent to {@code valueOf(BigDecimal.valueOf(value))}.
+     * For normal, finite, values, this is equivalent to {@code valueOf(BigDecimal.valueOf(value))}.
      * </p>
      *
      * @param value
@@ -96,7 +96,7 @@ public final class Decimal32 extends Decimal<Decimal32> {
     /**
      * Converts a decimal to Decimal32.
      * <p>
-     * For normal decimals, this behaves like {@code valueOf(decimal.toBigDecimal())}, see
+     * For normal, finite, decimals, this behaves like {@code valueOf(decimal.toBigDecimal())}, see
      * {@link #valueOf(BigDecimal)}.
      * </p>
      *

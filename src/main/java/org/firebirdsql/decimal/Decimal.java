@@ -38,7 +38,7 @@ public abstract class Decimal<T extends Decimal<T>> {
 
     Decimal(int signum, DecimalType type) {
         assert type != null : "Type should not be null";
-        assert type != DecimalType.NORMAL : "Constructor only suitable for non-NORMAL";
+        assert type != DecimalType.FINITE : "Constructor only suitable for non-FINITE";
         assert -1 == signum || signum == 1 : "Invalid signum, " + signum;
         this.signum = signum;
         this.type = type;
@@ -47,7 +47,7 @@ public abstract class Decimal<T extends Decimal<T>> {
 
     Decimal(int signum, BigDecimal bigDecimal) {
         assert -1 <= signum && signum <= 1 : "Invalid signum, " + signum;
-        this.type = DecimalType.NORMAL;
+        this.type = DecimalType.FINITE;
         this.signum = signum != 0 ? signum : Signum.POSITIVE;
         this.bigDecimal = requireNonNull(bigDecimal, "bigDecimal");
         if (bigDecimal.compareTo(BigDecimal.ZERO) != 0 && this.signum != bigDecimal.signum()) {
@@ -64,7 +64,7 @@ public abstract class Decimal<T extends Decimal<T>> {
      *         If this value is a NaN, sNaN or Infinity, which can't be represented as a {@code BigDecimal).
      */
     public final BigDecimal toBigDecimal() {
-        if (type != DecimalType.NORMAL) {
+        if (type != DecimalType.FINITE) {
             throw new DecimalInconvertibleException(
                     "Value " + toString() + " cannot be converted to a BigDecimal", type, signum);
         }
@@ -74,7 +74,7 @@ public abstract class Decimal<T extends Decimal<T>> {
     /**
      * Converts this decimal to a double value.
      * <p>
-     * For normal decimal values, see {@link BigDecimal#doubleValue()}.
+     * For normal, finite, decimal values, see {@link BigDecimal#doubleValue()}.
      * </p>
      * <p>
      * For type INFINITY, returns {@code Double.POSITIVE_INFINITY} or {@code Double.NEGATIVE_INFINITY}. For all
@@ -85,7 +85,7 @@ public abstract class Decimal<T extends Decimal<T>> {
      */
     public final double doubleValue() {
         switch (type) {
-        case NORMAL:
+        case FINITE:
             return bigDecimal.doubleValue();
 
         case INFINITY:
@@ -148,7 +148,7 @@ public abstract class Decimal<T extends Decimal<T>> {
      * @return {@code true} if this value is zero (ignoring scale), {@code false} if this is a special, or not zero.
      */
     final boolean isEquivalentToZero() {
-        return type == DecimalType.NORMAL
+        return type == DecimalType.FINITE
                 && BigDecimal.ZERO.compareTo(bigDecimal) == 0;
     }
 
@@ -169,7 +169,7 @@ public abstract class Decimal<T extends Decimal<T>> {
      */
     final T negate() {
         final DecimalFactory<T> decimalFactory = getDecimalFactory();
-        if (type != DecimalType.NORMAL) {
+        if (type != DecimalType.FINITE) {
             return decimalFactory.getSpecialConstant(-1 * signum, type);
         }
         return decimalFactory.createDecimal(-1 * signum, bigDecimal.negate());
@@ -178,7 +178,7 @@ public abstract class Decimal<T extends Decimal<T>> {
     @Override
     public final String toString() {
         switch (type) {
-        case NORMAL:
+        case FINITE:
             if (signum == Signum.NEGATIVE && isEquivalentToZero()) {
                 return "-" + bigDecimal.toString();
             }
@@ -280,7 +280,7 @@ public abstract class Decimal<T extends Decimal<T>> {
          * {@code Double.NaN} is mapped to positive NaN, the infinities to their equivalent +/- infinity.
          * </p>
          * <p>
-         * For normal values, this is equivalent to {@code valueOf(BigDecimal.valueOf(value))}.
+         * For normal, finite, values, this is equivalent to {@code valueOf(BigDecimal.valueOf(value))}.
          * </p>
          *
          * @param value
@@ -302,7 +302,7 @@ public abstract class Decimal<T extends Decimal<T>> {
         /**
          * Converts a decimal to this type.
          * <p>
-         * For normal decimals, this behaves like {@code valueOf(decimal.toBigDecimal())}, see
+         * For normal, finite, decimals, this behaves like {@code valueOf(decimal.toBigDecimal())}, see
          * {@link #valueOf(BigDecimal)}.
          * </p>
          *
@@ -313,7 +313,7 @@ public abstract class Decimal<T extends Decimal<T>> {
         final T valueOf(Decimal<?> decimal) {
             if (decimal.getClass() == type) {
                 return type.cast(decimal);
-            } else if (decimal.type == DecimalType.NORMAL) {
+            } else if (decimal.type == DecimalType.FINITE) {
                 return valueOf(decimal.bigDecimal);
             } else {
                 return getSpecialConstant(decimal.signum, decimal.type);

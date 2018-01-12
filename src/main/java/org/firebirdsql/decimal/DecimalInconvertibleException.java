@@ -24,7 +24,7 @@ package org.firebirdsql.decimal;
 /**
  * Thrown to indicate a decimal value could not be converted to a target type (usually {@link java.math.BigDecimal}).
  * <p>
- * This exception should only be thrown for cases when the {@link DecimalType} other than {@link DecimalType#NORMAL}
+ * This exception should only be thrown for cases when the {@link DecimalType} other than {@link DecimalType#FINITE}
  * cannot be represented in the target type. That is, if the target type does not support Infinity and/or NaN.
  * </p>
  * <p>

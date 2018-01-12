@@ -68,7 +68,7 @@ final class DecimalCodec<T extends Decimal<T>> {
         final int firstByte = decBytes[0] & 0xff;
         final int signum = -1 * (firstByte >>> 7) | 1;
         final DecimalType decimalType = DecimalType.fromFirstByte(firstByte);
-        if (decimalType != DecimalType.NORMAL) {
+        if (decimalType != DecimalType.FINITE) {
             return decimalFactory.getSpecialConstant(signum, decimalType);
         } else {
             // NOTE: get exponent MSB from combination field and first 2 bits of exponent continuation in one go
@@ -109,8 +109,8 @@ final class DecimalCodec<T extends Decimal<T>> {
             decBytes[0] = (byte) NEGATIVE_BIT;
         }
 
-        if (decimal.getType() == DecimalType.NORMAL) {
-            encodeNormal(
+        if (decimal.getType() == DecimalType.FINITE) {
+            encodeFinite(
                     decimalFormat.validate(decimal.toBigDecimal()),
                     decBytes);
         } else {
@@ -120,7 +120,7 @@ final class DecimalCodec<T extends Decimal<T>> {
         return decBytes;
     }
 
-    private void encodeNormal(BigDecimal decimal, byte[] decBytes) {
+    private void encodeFinite(BigDecimal decimal, byte[] decBytes) {
         final int biasedExponent = decimalFormat.biasedExponent(-decimal.scale());
         final BigInteger coefficient = decimal.unscaledValue();
         final int mostSignificantDigit = coefficientCoder.encodeValue(coefficient, decBytes);

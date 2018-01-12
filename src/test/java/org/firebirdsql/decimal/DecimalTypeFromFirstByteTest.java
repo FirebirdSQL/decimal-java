@@ -80,7 +80,7 @@ public class DecimalTypeFromFirstByteTest {
             if ((value & SPECIALS_MASK) == SPECIALS_MASK) {
                 continue;
             }
-            values.add(testCase(value, DecimalType.NORMAL));
+            values.add(testCase(value, DecimalType.FINITE));
         }
         return values;
     }
