@@ -254,6 +254,22 @@ public class Decimal64Test {
     }
 
     @Test
+    public void toDecimal_Decimal64_Decimal32_valueOutOfRange_toInfinity() {
+        Decimal64 value = Decimal64.valueOf("1.23456E97");
+
+        assertSame(Decimal32.POSITIVE_INFINITY, value.toDecimal(Decimal32.class));
+    }
+
+    @Test
+    public void toDecimal_Decimal64_Decimal32_valueOutOfRange_throwException() {
+        expectedException.expect(DecimalOverflowException.class);
+        expectedException.expectMessage("The scale -92 is out of range for this type");
+        Decimal64 value = Decimal64.valueOf("1.23456E97");
+
+        value.toDecimal(Decimal32.class, OverflowHandling.THROW_EXCEPTION);
+    }
+
+    @Test
     public void toDecimal_Decimal64_Decimal128() {
         Decimal64 value = Decimal64.valueOf("1.23456");
 

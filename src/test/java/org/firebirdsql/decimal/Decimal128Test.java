@@ -246,10 +246,42 @@ public class Decimal128Test {
     }
 
     @Test
+    public void toDecimal_Decimal128_Decimal32_valueOutOfRange_toInfinity() {
+        Decimal128 value = Decimal128.valueOf("1.23456E97");
+
+        assertSame(Decimal32.POSITIVE_INFINITY, value.toDecimal(Decimal32.class));
+    }
+
+    @Test
+    public void toDecimal_Decimal128_Decimal32_valueOutOfRange_throwException() {
+        expectedException.expect(DecimalOverflowException.class);
+        expectedException.expectMessage("The scale -92 is out of range for this type");
+        Decimal128 value = Decimal128.valueOf("1.23456E97");
+
+        value.toDecimal(Decimal32.class, OverflowHandling.THROW_EXCEPTION);
+    }
+
+    @Test
     public void toDecimal_Decimal128_Decimal64() {
         Decimal128 value = Decimal128.valueOf("1.23456");
 
         assertEquals(Decimal64.valueOf("1.23456"), value.toDecimal(Decimal64.class));
+    }
+
+    @Test
+    public void toDecimal_Decimal128_Decimal64_valueOutOfRange_toInfinity() {
+        Decimal128 value = Decimal128.valueOf("1.23456E385");
+
+        assertSame(Decimal32.POSITIVE_INFINITY, value.toDecimal(Decimal32.class));
+    }
+
+    @Test
+    public void toDecimal_Decimal128_Decimal64_valueOutOfRange_throwException() {
+        expectedException.expect(DecimalOverflowException.class);
+        expectedException.expectMessage("The scale -380 is out of range for this type");
+        Decimal128 value = Decimal128.valueOf("1.23456E385");
+
+        value.toDecimal(Decimal32.class, OverflowHandling.THROW_EXCEPTION);
     }
 
     @Test

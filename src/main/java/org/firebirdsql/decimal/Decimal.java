@@ -136,6 +136,35 @@ public abstract class Decimal<T extends Decimal<T>> {
         }
     }
 
+    /**
+     * Converts this decimal to the requested decimal type, rounding when necessary.
+     *
+     * @param decimalType
+     *         Target decimal type
+     * @param overflowHandling
+     *         Handling of overflows
+     * @param <D>
+     *         Type parameter of decimal
+     * @return This value after conversion, or this if {@code decimalType} is the same as this type
+     * @throws IllegalArgumentException
+     *         If conversion to {@code decimalType} is not supported
+     * @throws DecimalOverflowException
+     *         If {@code OverflowHandling#THROW_EXCEPTION} and the value is out of range for the target decimal type.
+     */
+    public final <D extends Decimal<D>> D toDecimal(Class<D> decimalType, OverflowHandling overflowHandling) {
+        if (decimalType == getClass()) {
+            return decimalType.cast(this);
+        } else if (decimalType == Decimal128.class) {
+            return decimalType.cast(Decimal128.valueOf(this, OverflowHandling.THROW_EXCEPTION));
+        } else if (decimalType == Decimal64.class) {
+            return decimalType.cast(Decimal64.valueOf(this, OverflowHandling.THROW_EXCEPTION));
+        } else if (decimalType == Decimal32.class) {
+            return decimalType.cast(Decimal32.valueOf(this, OverflowHandling.THROW_EXCEPTION));
+        } else {
+            throw new IllegalArgumentException("Unsupported conversion to " + decimalType.getName());
+        }
+    }
+
     final DecimalType getType() {
         return type;
     }
