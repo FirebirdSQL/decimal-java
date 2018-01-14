@@ -26,7 +26,7 @@ package org.firebirdsql.decimal;
  *
  * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
  */
-public final class DecimalOverflowException extends RuntimeException {
+public final class DecimalOverflowException extends ArithmeticException {
 
     public DecimalOverflowException(String message) {
         super(message);

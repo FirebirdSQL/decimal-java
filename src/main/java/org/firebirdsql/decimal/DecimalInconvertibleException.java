@@ -34,7 +34,7 @@ package org.firebirdsql.decimal;
  *
  * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
  */
-public class DecimalInconvertibleException extends RuntimeException {
+public class DecimalInconvertibleException extends ArithmeticException {
 
     private final DecimalType decimalType;
     private final int signum;
