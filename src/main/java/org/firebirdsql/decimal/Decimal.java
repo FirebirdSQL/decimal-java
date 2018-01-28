@@ -22,6 +22,7 @@
 package org.firebirdsql.decimal;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import static java.util.Objects.requireNonNull;
 
@@ -102,7 +103,11 @@ public abstract class Decimal<T extends Decimal<T>> {
     }
 
     /**
-     * Converts this decimal to its IEEE-754 byte encoding.
+     * Converts this decimal to its IEEE-754 byte encoding in network byte-order (aka big-endian).
+     * <p>
+     * This method returns network byte-order (aka big-endian). When you need little-endian order, you will need to
+     * reverse the bytes in the array.
+     * </p>
      *
      * @return byte array
      */
@@ -306,6 +311,42 @@ public abstract class Decimal<T extends Decimal<T>> {
             // OverflowHandling.THROW_EXCEPTION is handled implicitly in createDecimal
             // Using value.signum() as rounding may round to zero, which would lose the signum information
             return createDecimal(value.signum(), roundedValue);
+        }
+
+        /**
+         * Creates a decimal from {@code value}, applying rounding where necessary.
+         * <p>
+         * Values exceeding the range of this type will be handled according to the specified overflow handling.
+         * </p>
+         * <p>
+         * Calling this method is equivalent to {@code valueOf(new BigDecimal(value), overflowHandling)}.
+         * </p>
+         *
+         * @param value
+         *         Big integer value to convert
+         * @param overflowHandling
+         *         Handling of overflows
+         * @return Decimal equivalent
+         * @throws DecimalOverflowException
+         *         If {@code OverflowHandling#THROW_EXCEPTION} and the value is out of range.
+         * @see #valueOfExact(BigInteger)
+         */
+        final T valueOf(BigInteger value, OverflowHandling overflowHandling) {
+            return valueOf(new BigDecimal(value), overflowHandling);
+        }
+
+        /**
+         * Creates a decimal from {@code value}, rejecting values that would lose precision due to rounding.
+         *
+         * @param value Big integer value to convert
+         * @throws DecimalOverflowException
+         *         If the value is out of range.
+         * @return Decimal equivalent
+         * @see #valueOf(BigInteger, OverflowHandling)
+         */
+        final T valueOfExact(BigInteger value) {
+            final BigDecimal bigDecimal = new BigDecimal(decimalFormat.validateCoefficient(value));
+            return createDecimal(value.signum(), bigDecimal);
         }
 
         /**

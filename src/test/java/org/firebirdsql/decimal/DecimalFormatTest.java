@@ -22,9 +22,14 @@
 
 package org.firebirdsql.decimal;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import java.math.BigInteger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 /**
  * Test to check if the decimal constants match the specification.
@@ -32,6 +37,9 @@ import static org.junit.Assert.assertEquals;
  * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
  */
 public class DecimalFormatTest {
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void decimal32() {
@@ -43,6 +51,40 @@ public class DecimalFormatTest {
         assertEquals("coefficientContinuationBits", 20, decimalFormat.coefficientContinuationBits);
         assertEquals("eLimit", 191, decimalFormat.eLimit);
         assertEquals("exponentBias", 101, decimalFormat.biasedExponent(0));
+    }
+
+    @Test
+    public void decimal32_validateCoefficient_min() {
+        final DecimalFormat decimalFormat = DecimalFormat.Decimal32;
+        final BigInteger value = new BigInteger("-9999999");
+
+        assertSame(value, decimalFormat.validateCoefficient(value));
+    }
+
+    @Test
+    public void decimal32_validateCoefficient_min_minusOne() {
+        final DecimalFormat decimalFormat = DecimalFormat.Decimal32;
+        final BigInteger value = new BigInteger("-9999999").subtract(BigInteger.ONE);
+        expectedException.expect(DecimalOverflowException.class);
+
+        decimalFormat.validateCoefficient(value);
+    }
+
+    @Test
+    public void decimal32_validateCoefficient_max() {
+        final DecimalFormat decimalFormat = DecimalFormat.Decimal32;
+        final BigInteger value = new BigInteger("9999999");
+
+        assertSame(value, decimalFormat.validateCoefficient(value));
+    }
+
+    @Test
+    public void decimal32_validateCoefficient_max_plusOne() {
+        final DecimalFormat decimalFormat = DecimalFormat.Decimal32;
+        final BigInteger value = new BigInteger("9999999").add(BigInteger.ONE);
+        expectedException.expect(DecimalOverflowException.class);
+
+        decimalFormat.validateCoefficient(value);
     }
 
     @Test
@@ -58,6 +100,40 @@ public class DecimalFormatTest {
     }
 
     @Test
+    public void decimal64_validateCoefficient_min() {
+        final DecimalFormat decimalFormat = DecimalFormat.Decimal64;
+        final BigInteger value = new BigInteger("-9999999999999999");
+
+        assertSame(value, decimalFormat.validateCoefficient(value));
+    }
+
+    @Test
+    public void decimal64_validateCoefficient_min_minusOne() {
+        final DecimalFormat decimalFormat = DecimalFormat.Decimal64;
+        final BigInteger value = new BigInteger("-9999999999999999").subtract(BigInteger.ONE);
+        expectedException.expect(DecimalOverflowException.class);
+
+        decimalFormat.validateCoefficient(value);
+    }
+
+    @Test
+    public void decimal64_validateCoefficient_max() {
+        final DecimalFormat decimalFormat = DecimalFormat.Decimal64;
+        final BigInteger value = new BigInteger("9999999999999999");
+
+        assertSame(value, decimalFormat.validateCoefficient(value));
+    }
+
+    @Test
+    public void decimal64_validateCoefficient_max_plusOne() {
+        final DecimalFormat decimalFormat = DecimalFormat.Decimal64;
+        final BigInteger value = new BigInteger("9999999999999999").add(BigInteger.ONE);
+        expectedException.expect(DecimalOverflowException.class);
+
+        decimalFormat.validateCoefficient(value);
+    }
+
+    @Test
     public void decimal128() {
         final DecimalFormat decimalFormat = DecimalFormat.Decimal128;
         assertEquals("formatBitLength", 128, decimalFormat.formatBitLength);
@@ -67,6 +143,40 @@ public class DecimalFormatTest {
         assertEquals("coefficientContinuationBits", 110, decimalFormat.coefficientContinuationBits);
         assertEquals("eLimit", 12287, decimalFormat.eLimit);
         assertEquals("exponentBias", 6176, decimalFormat.biasedExponent(0));
+    }
+
+    @Test
+    public void decimal128_validateCoefficient_min() {
+        final DecimalFormat decimalFormat = DecimalFormat.Decimal128;
+        final BigInteger value = new BigInteger("-9999999999999999999999999999999999");
+
+        assertSame(value, decimalFormat.validateCoefficient(value));
+    }
+
+    @Test
+    public void decimal128_validateCoefficient_min_minusOne() {
+        final DecimalFormat decimalFormat = DecimalFormat.Decimal128;
+        final BigInteger value = new BigInteger("-9999999999999999999999999999999999").subtract(BigInteger.ONE);
+        expectedException.expect(DecimalOverflowException.class);
+
+        decimalFormat.validateCoefficient(value);
+    }
+
+    @Test
+    public void decimal128_validateCoefficient_max() {
+        final DecimalFormat decimalFormat = DecimalFormat.Decimal128;
+        final BigInteger value = new BigInteger("9999999999999999999999999999999999");
+
+        assertSame(value, decimalFormat.validateCoefficient(value));
+    }
+
+    @Test
+    public void decimal128_validateCoefficient_max_plusOne() {
+        final DecimalFormat decimalFormat = DecimalFormat.Decimal128;
+        final BigInteger value = new BigInteger("9999999999999999999999999999999999").add(BigInteger.ONE);
+        expectedException.expect(DecimalOverflowException.class);
+
+        decimalFormat.validateCoefficient(value);
     }
 
 }

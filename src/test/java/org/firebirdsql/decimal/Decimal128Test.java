@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
 
 import static org.junit.Assert.*;
@@ -354,4 +355,62 @@ public class Decimal128Test {
         assertEquals(Decimal128.POSITIVE_SIGNALING_NAN, Decimal128.NEGATIVE_SIGNALING_NAN.negate());
     }
 
+    @Test
+    public void valueOfExact_BigInteger_min() {
+        final BigInteger value = new BigInteger("-9999999999999999999999999999999999");
+
+        assertEquals(new BigDecimal("-9999999999999999999999999999999999"), Decimal128.valueOfExact(value).toBigDecimal());
+    }
+
+    @Test
+    public void valueOfExact_BigInteger_min_minusOne() {
+        final BigInteger value = new BigInteger("-9999999999999999999999999999999999").subtract(BigInteger.ONE);
+        expectedException.expect(DecimalOverflowException.class);
+
+        Decimal128.valueOfExact(value);
+    }
+
+    @Test
+    public void valueOfExact_BigInteger_max() {
+        final BigInteger value = new BigInteger("9999999999999999999999999999999999");
+
+        assertEquals(new BigDecimal("9999999999999999999999999999999999"), Decimal128.valueOfExact(value).toBigDecimal());
+    }
+
+    @Test
+    public void valueOfExact_BigInteger_max_plusOne() {
+        final BigInteger value = new BigInteger("9999999999999999999999999999999999").add(BigInteger.ONE);
+        expectedException.expect(DecimalOverflowException.class);
+
+        Decimal128.valueOfExact(value);
+    }
+
+    @Test
+    public void valueOf_BigInteger_min() {
+        final BigInteger value = new BigInteger("-9999999999999999999999999999999999");
+
+        assertEquals(new BigDecimal("-9999999999999999999999999999999999"), Decimal128.valueOf(value).toBigDecimal());
+    }
+
+    @Test
+    public void valueOf_BigInteger_min_minusOne() {
+        final BigInteger value = new BigInteger("-9999999999999999999999999999999999").subtract(BigInteger.ONE);
+
+        assertEquals(new BigDecimal("-1000000000000000000000000000000000E+1"), Decimal128.valueOf(value).toBigDecimal());
+    }
+
+    @Test
+    public void valueOf_BigInteger_max() {
+        final BigInteger value = new BigInteger("9999999999999999999999999999999999");
+
+        assertEquals(new BigDecimal("9999999999999999999999999999999999"), Decimal128.valueOf(value).toBigDecimal());
+    }
+
+    @Test
+    public void valueOf_BigInteger_max_plusOne() {
+        final BigInteger value = new BigInteger("9999999999999999999999999999999999").add(BigInteger.ONE);
+
+        assertEquals(new BigDecimal("1000000000000000000000000000000000E+1"), Decimal128.valueOf(value).toBigDecimal());
+    }
+    
 }
