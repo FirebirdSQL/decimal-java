@@ -23,6 +23,7 @@ package org.firebirdsql.decimal;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
 
 import static java.util.Objects.requireNonNull;
 
@@ -283,6 +284,13 @@ public abstract class Decimal<T extends Decimal<T>> {
         }
 
         /**
+         * @return Math context for the decimal type constructed.
+         */
+        private MathContext getMathContext() {
+            return decimalFormat.getMathContext();
+        }
+
+        /**
          * @see DecimalFormat#validate(BigDecimal)
          */
         final BigDecimal validateRange(BigDecimal value) {
@@ -332,7 +340,7 @@ public abstract class Decimal<T extends Decimal<T>> {
          * @see #valueOfExact(BigInteger)
          */
         final T valueOf(BigInteger value, OverflowHandling overflowHandling) {
-            return valueOf(new BigDecimal(value), overflowHandling);
+            return valueOf(new BigDecimal(value, getMathContext()), overflowHandling);
         }
 
         /**
@@ -375,7 +383,8 @@ public abstract class Decimal<T extends Decimal<T>> {
                 return getSpecialConstant(Signum.NEGATIVE, DecimalType.INFINITY);
             }
 
-            return valueOf(BigDecimal.valueOf(value), overflowHandling);
+            // TODO Use new BigDecimal(double, MathContext) instead, has slightly different precision?
+            return valueOf(new BigDecimal(Double.toString(value), getMathContext()), overflowHandling);
         }
 
         /**
@@ -436,7 +445,7 @@ public abstract class Decimal<T extends Decimal<T>> {
                     return valueOfSpecial(value);
                 }
             }
-            BigDecimal bdValue = new BigDecimal(value);
+            BigDecimal bdValue = new BigDecimal(value, getMathContext());
             T decimalValue = valueOf(bdValue, overflowHandling);
             if (decimalValue.isEquivalentToZero()
                     && value.charAt(0) == '-'
