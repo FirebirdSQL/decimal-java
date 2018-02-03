@@ -129,17 +129,7 @@ public abstract class Decimal<T extends Decimal<T>> {
      *         If conversion to {@code decimalType} is not supported
      */
     public final <D extends Decimal<D>> D toDecimal(Class<D> decimalType) {
-        if (decimalType == getClass()) {
-            return decimalType.cast(this);
-        } else if (decimalType == Decimal128.class) {
-            return decimalType.cast(Decimal128.valueOf(this));
-        } else if (decimalType == Decimal64.class) {
-            return decimalType.cast(Decimal64.valueOf(this));
-        } else if (decimalType == Decimal32.class) {
-            return decimalType.cast(Decimal32.valueOf(this));
-        } else {
-            throw new IllegalArgumentException("Unsupported conversion to " + decimalType.getName());
-        }
+        return toDecimal(decimalType, OverflowHandling.ROUND_TO_INFINITY);
     }
 
     /**
@@ -161,11 +151,11 @@ public abstract class Decimal<T extends Decimal<T>> {
         if (decimalType == getClass()) {
             return decimalType.cast(this);
         } else if (decimalType == Decimal128.class) {
-            return decimalType.cast(Decimal128.valueOf(this, OverflowHandling.THROW_EXCEPTION));
+            return decimalType.cast(Decimal128.valueOf(this, overflowHandling));
         } else if (decimalType == Decimal64.class) {
-            return decimalType.cast(Decimal64.valueOf(this, OverflowHandling.THROW_EXCEPTION));
+            return decimalType.cast(Decimal64.valueOf(this, overflowHandling));
         } else if (decimalType == Decimal32.class) {
-            return decimalType.cast(Decimal32.valueOf(this, OverflowHandling.THROW_EXCEPTION));
+            return decimalType.cast(Decimal32.valueOf(this, overflowHandling));
         } else {
             throw new IllegalArgumentException("Unsupported conversion to " + decimalType.getName());
         }
