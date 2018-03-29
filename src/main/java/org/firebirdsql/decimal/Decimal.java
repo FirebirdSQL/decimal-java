@@ -63,7 +63,7 @@ public abstract class Decimal<T extends Decimal<T>> {
      *
      * @return Value as BigDecimal
      * @throws DecimalInconvertibleException
-     *         If this value is a NaN, sNaN or Infinity, which can't be represented as a {@code BigDecimal).
+     *         If this value is a NaN, sNaN or Infinity, which can't be represented as a {@code BigDecimal}.
      */
     public final BigDecimal toBigDecimal() {
         if (type != DecimalType.FINITE) {
