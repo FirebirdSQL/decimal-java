@@ -4,6 +4,8 @@ decimal-java
 Decimal-java is a library to convert `java.math.BigDecimal` to and from 
 IEEE-754r (IEEE-754-2008) decimal byte representations.
 
+[![Build Status](https://travis-ci.com/FirebirdSQL/decimal-java.svg?branch=master)](https://travis-ci.com/FirebirdSQL/decimal-java)
+
 License
 -------
 
