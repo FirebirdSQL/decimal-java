@@ -13,8 +13,7 @@ see also LICENSE.md.
 Status
 ------
 
-At the moment, the API and underlying implementation is still in a state of 
-flux, this is expected to stabilize mid-January 2018.
+The API is stable and is not expected to change.
 
 Goals
 -----
