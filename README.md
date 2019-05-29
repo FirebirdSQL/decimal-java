@@ -49,10 +49,9 @@ and 34 digits) using _decimal64_ and _decimal128_ in the protocol, and this
 support needed to be added to [Jaybird](https://github.com/FirebirdSQL/jaybird), 
 the Firebird JDBC driver.
 
-Unfortunately, I ([Mark Rotteveel](https://github.com/mrotteveel/)) was unable 
-to find an existing library for this (maybe my Google-fu is lacking though), so 
-I created one. As I believe others may have similar needs, I decided to release 
-it as a separate library.
+As I was unable to find an existing library for this (maybe my Google-fu is
+lacking though), so I created one. As I believe others may have similar needs, I 
+decided to release it as a separate library.
 
 I have tried to keep this library generically usable, but I'm sure this 
 _raison d'être_ has informed a number of design and implementation decisions. 
