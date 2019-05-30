@@ -1,24 +1,26 @@
 plugins {
     id 'java-library'
+    id 'nu.studer.credentials' version '1.0.7'
+    id 'maven'
+    id 'signing'
 }
 
 group 'org.firebirdsql'
 version '1.0-SNAPSHOT'
 
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+ext."signing.password" = credentials."signing.password"
+ext.ossrhPassword = credentials.ossrhPassword
+
 sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
 
 repositories {
     mavenCentral()
 }
 
-jar {
-    manifest {
-        attributes(
-                'Implementation-Title': project.name,
-                'Implementation-Version': project.version,
-                'Automatic-Module-Name': 'org.firebirdsql.decimal'
-        )
-    }
+dependencies {
+    testImplementation  'junit:junit:4.12'
 }
 
 sourceSets {
@@ -35,6 +37,76 @@ sourceSets {
     }
 }
 
-dependencies {
-    testImplementation  'junit:junit:4.12'
+jar {
+    manifest {
+        attributes(
+                'Implementation-Title': project.name,
+                'Implementation-Version': project.version,
+                'Automatic-Module-Name': 'org.firebirdsql.decimal'
+        )
+    }
+}
+
+task javadocJar(type: Jar) {
+    archiveClassifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name 'decimal-java'
+                packaging 'jar'
+                description 'A library to convert java.math.BigDecimal to and from ' +
+                        'IEEE-754r (IEEE-754-2008) decimal byte representations.'
+                url 'https://github.com/FirebirdSQL/decimal-java'
+
+                scm {
+                    connection 'scm:git:https://github.com/FirebirdSQL/decimal-java.git'
+                    developerConnection 'scm:git:git@github.com:FirebirdSQL/decimal-java.git'
+                    url 'https://github.com/FirebirdSQL/decimal-java'
+                }
+
+                licenses {
+                    license {
+                        name 'The MIT License'
+                        url 'https://opensource.org/licenses/MIT'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'mrotteveel'
+                        name 'Mark Rotteveel'
+                        email 'mark@lawinegevaar.nl'
+                    }
+                }
+            }
+        }
+    }
 }
