@@ -6,7 +6,7 @@ plugins {
 }
 
 group 'org.firebirdsql'
-version '1.0.0'
+version '1.0.1-SNAPSHOT'
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 ext."signing.password" = credentials."signing.password"
