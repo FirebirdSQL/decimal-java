@@ -7,6 +7,19 @@ IEEE-754r (IEEE-754-2008) decimal byte representations.
 [![Build Status](https://travis-ci.com/FirebirdSQL/decimal-java.svg?branch=master)](https://travis-ci.com/FirebirdSQL/decimal-java)
 [![MavenCentral](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql/decimal-java/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql/decimal-java/)
 
+Maven
+-----
+
+Get decimal-java from Maven:
+
+```xml
+<dependency>
+    <groupId>org.firebirdsql</groupId>
+    <artifactId>decimal-java</artifactId>
+    <version>1.0.0-RC-1</version>
+</dependency>
+```
+
 License
 -------
 
