@@ -5,6 +5,7 @@ Decimal-java is a library to convert `java.math.BigDecimal` to and from
 IEEE-754r (IEEE-754-2008) decimal byte representations.
 
 [![Build Status](https://travis-ci.com/FirebirdSQL/decimal-java.svg?branch=master)](https://travis-ci.com/FirebirdSQL/decimal-java)
+[![MavenCentral](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql/decimal-java/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql/decimal-java/)
 
 License
 -------
@@ -42,6 +43,8 @@ As an alternative, consider using `BigDecimal` with `MathContext.DECIMAL128`,
 
 Usage
 -----
+
+For full javadoc (of latest tagged build), see https://firebirdsql.github.io/decimal-java/javadoc/
 
 Decoding a 4-byte Decimal32 to a `java.math.BigDecimal`:
 
