@@ -99,7 +99,7 @@ The `valueOf` methods exists for:
 
 - `BigDecimal`
 - `BigInteger`
- - In addition there is `valueOfExact(BigInteger)` which throws 
+  - In addition there is `valueOfExact(BigInteger)` which throws 
  `DecimalOverflowException` if the `BigInteger` needs to be rounded to fit the
  target decimal type.
 - `String`
