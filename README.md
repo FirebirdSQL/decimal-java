@@ -40,6 +40,73 @@ This library explicitly does not include mathematical operations on decimal.
 As an alternative, consider using `BigDecimal` with `MathContext.DECIMAL128`,
 `MathContext.DECIMAL64`, or `MathContext.DECIMAL32`.
 
+Usage
+-----
+
+Decoding a 4-byte Decimal32 to a `java.math.BigDecimal`:
+
+```java
+byte[] bytes = {(byte) 0xc7, (byte) 0xf4, (byte) 0xd2, (byte) 0xe7};
+Decimal32 decimal32 = Decimal32.parseBytes(bytes);
+BigDecimal bigDecimal = decimal32.toBigDecimal();
+assertEquals(new BigDecimal("-1.234567E+96"), bigDecimal);
+```
+
+The method `toBigDecimal` throws `DecimalInconvertibleException` if the decimal
+value is an infinity or NaN value. The actual type and sign can be obtained from
+the exception.
+
+Encoding a `java.math.BigDecimal` to Decimal32 byte array:
+
+```java
+BigDecimal bigDecimal = new BigDecimal("-7.50E-7");
+Decimal32 decimal32 = Decimal32.valueOf(bigDecimal);
+byte[] bytes = decimal32.toBytes();
+assertArrayEquals(new byte[] {(byte) 0xa1, (byte) 0xc0, 0x03, (byte) 0xd0}, bytes);
+```
+
+This will apply rounding if `bigDecimal` value doesn't fit a Decimal32, and
+overflow will 'round' to infinity.
+
+If overflow to infinity is unwanted, then use:
+
+```java
+BigDecimal bigDecimal = new BigDecimal("-7.50E-7");
+Decimal32 decimal32 = Decimal32.valueOf(bigDecimal, OverflowHandling.THROW_EXCEPTION);
+byte[] bytes = decimal32.toBytes();
+assertArrayEquals(new byte[] {(byte) 0xa1, (byte) 0xc0, 0x03, (byte) 0xd0}, bytes);
+```
+
+Conversion works the same for `Decimal64` and `Decimal128`.
+
+The `valueOf` methods exists for:
+
+- `BigDecimal`
+- `BigInteger`
+ - In addition there is `valueOfExact(BigInteger)` which throws 
+ `DecimalOverflowException` if the `BigInteger` needs to be rounded to fit the
+ target decimal type.
+- `String`
+- `double`
+- `Decimal` (parent class of `Decimal32`, `Decimal64` and `Decimal128`) to allow
+conversion between decimal types
+
+The `valueOf` methods will round values to fit the target decimal type, and -
+depending on the specified overflow handling - will either return +/- infinity
+or throw an exception on overflow.
+
+Conversion to a type is provided by:
+
+- `toBytes()`
+- `toBigDecimal()` - will throw `DecimalInconvertibleException` if the value is
+an infinity or NaN value
+- `toString()`
+- `doubleValue()`
+- `toDecimal(Class)` and `toDecimal(Class, OverflowHandling)`
+
+To obtain a `BigInteger`, use `toBigDecimal().toBigInteger()` but be aware that 
+large values (especially of `Decimal128`) can result in significant memory use. 
+
 Background
 ----------
 
@@ -69,6 +136,6 @@ References
     -   [Decimal Arithmetic Encodings](http://speleotrove.com/decimal/decbits.html)
     -   [A Summary of Densely Packed Decimal encoding](http://speleotrove.com/decimal/DPDecimal.html)
     -   [The decNumber Library](http://speleotrove.com/decimal/decnumber.html)
--   [Firebird 4 alpha 1 release notes](http://web.firebirdsql.org/downloads/prerelease/v40alpha1/Firebird-4.0.0_Alpha1-ReleaseNotes.pdf)
+-   [Firebird 4 beta 1 release notes](http://web.firebirdsql.org/downloads/prerelease/v40beta1/Firebird-4.0.0_Beta1-ReleaseNotes.pdf)
 
  

@@ -27,3 +27,6 @@ In addition, you need to set the following credentials
 ./gradlew addCredentials --key signing.password --value <your secret key password> -PcredentialsPassphrase=<credentials password> 
 ./gradlew addCredentials --key ossrhPassword --value <your sonatyp OSSRH password> -PcredentialsPassphrase=<credentials password> 
 ```
+
+See https://github.com/etiennestuder/gradle-credentials-plugin for details on
+credentials.
