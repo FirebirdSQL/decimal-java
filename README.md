@@ -4,7 +4,7 @@ decimal-java
 Decimal-java is a library to convert `java.math.BigDecimal` to and from 
 IEEE-754r (IEEE-754-2008) decimal byte representations.
 
-[![Build Status](https://travis-ci.com/FirebirdSQL/decimal-java.svg?branch=master)](https://travis-ci.com/FirebirdSQL/decimal-java)
+[![Java CI with Gradle](https://github.com/FirebirdSQL/decimal-java/actions/workflows/gradle.yml/badge.svg?branch=master)](https://github.com/FirebirdSQL/decimal-java/actions/workflows/gradle.yml?query=branch%3Amaster)
 [![MavenCentral](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql/decimal-java/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql/decimal-java/)
 
 Maven
@@ -152,6 +152,6 @@ References
     -   [Decimal Arithmetic Encodings](http://speleotrove.com/decimal/decbits.html)
     -   [A Summary of Densely Packed Decimal encoding](http://speleotrove.com/decimal/DPDecimal.html)
     -   [The decNumber Library](http://speleotrove.com/decimal/decnumber.html)
--   [Firebird 4 beta 1 release notes](http://web.firebirdsql.org/downloads/prerelease/v40beta1/Firebird-4.0.0_Beta1-ReleaseNotes.pdf)
+-   [Firebird 4.0 Release Notes](https://www.firebirdsql.org/file/documentation/release_notes/html/en/4_0/rlsnotes40.html)
 
  
