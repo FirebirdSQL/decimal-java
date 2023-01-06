@@ -1,22 +1,38 @@
+/*
+  Gradle build script for decimal-java.
+
+  Uploading archives:
+
+  publish -PcredentialsPassphrase=<credentials password>
+ */
+
 plugins {
     id 'java-library'
-    id 'nu.studer.credentials' version '1.0.7'
-    id 'maven'
+    id 'nu.studer.credentials' version '3.0'
+    id 'maven-publish'
     id 'signing'
 }
 
 group 'org.firebirdsql'
 version '1.0.1-SNAPSHOT'
 
-ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
-ext."signing.password" = credentials."signing.password"
-ext.ossrhPassword = credentials.ossrhPassword
+ext.'signing.password' = credentials.forKey('signing.password')
+ext.ossrhPassword = credentials.forKey('ossrhPassword')
+
+ext.isReleaseVersion = provider {
+    !version.endsWith("SNAPSHOT")
+}
 
 sourceCompatibility = JavaVersion.VERSION_1_7
 targetCompatibility = JavaVersion.VERSION_1_7
 
 repositories {
     mavenCentral()
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
 dependencies {
@@ -47,66 +63,85 @@ jar {
     }
 }
 
-task javadocJar(type: Jar) {
-    archiveClassifier = 'javadoc'
-    from javadoc
+javadoc {
+    options.author()
+    options.windowTitle = "decimal-java API"
+    options.docTitle = 'decimal-java'
+    options.bottom = "Copyright &copy; 2017-${new Date().format("yyyy")} Jaybird (Firebird JDBC) team. All rights reserved."
+    if(JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+        options.addBooleanOption('Xdoclint:none', true)
+    }
 }
 
-task sourcesJar(type: Jar) {
-    archiveClassifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-artifacts {
-    archives javadocJar, sourcesJar
-}
-
-signing {
-    required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
-    sign configurations.archives
-}
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
-            }
-
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
-            }
-
-            pom.project {
-                name 'decimal-java'
-                packaging 'jar'
-                description 'A library to convert java.math.BigDecimal to and from ' +
+publishing {
+    publications {
+        // Main maven artifact
+        mavenJava(MavenPublication) {
+            from components.java
+            pom {
+                name = 'decimal-java'
+                packaging = 'jar'
+                description = 'A library to convert java.math.BigDecimal to and from ' +
                         'IEEE-754r (IEEE-754-2008) decimal byte representations.'
-                url 'https://github.com/FirebirdSQL/decimal-java'
-
-                scm {
-                    connection 'scm:git:https://github.com/FirebirdSQL/decimal-java.git'
-                    developerConnection 'scm:git:git@github.com:FirebirdSQL/decimal-java.git'
-                    url 'https://github.com/FirebirdSQL/decimal-java'
-                }
+                url = 'https://github.com/FirebirdSQL/decimal-java'
+                inceptionYear = '2017'
 
                 licenses {
                     license {
-                        name 'The MIT License'
-                        url 'https://opensource.org/licenses/MIT'
+                        name = 'The MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
                     }
                 }
 
                 developers {
                     developer {
-                        id 'mrotteveel'
-                        name 'Mark Rotteveel'
-                        email 'mark@lawinegevaar.nl'
+                        id = 'mrotteveel'
+                        name = 'Mark Rotteveel'
+                        email = 'mark@lawinegevaar.nl'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:https://github.com/FirebirdSQL/decimal-java.git'
+                    developerConnection = 'scm:git:git@github.com:FirebirdSQL/decimal-java.git'
+                    url = 'https://github.com/FirebirdSQL/decimal-java'
+                }
+
+                mailingLists {
+                    mailingList {
+                        name = 'firebird-java'
+                        subscribe = 'firebird-java+subscribe@googlegroups.com'
+                        unsubscribe = 'firebird-java+unsubscribe@googlegroups.com'
+                        post = 'firebird-java@googlegroups.com'
+                        archive = 'https://groups.google.com/g/firebird-java'
+                        otherArchives = ['http://fb-list-archive.s3-website-eu-west-1.amazonaws.com/firebird-java/index.html']
                     }
                 }
             }
         }
     }
+    repositories {
+        maven {
+            url = project.isReleaseVersion.get() ? project.releaseRepository : project.snapshotRepository
+            credentials {
+                username = findProperty('ossrhUsername') ?: null
+                password = findProperty('ossrhPassword') ?: null
+            }
+        }
+    }
+}
+
+tasks.withType(PublishToMavenRepository).each {
+    it.doFirst {
+        if (findProperty('ossrhUsername') == null || findProperty('ossrhPassword') == null) {
+            throw new RuntimeException('No credentials for publishing, make sure to specify the properties ' +
+                    'credentialsPassphrase, or ossrhUsername and ossrhPassword. See devdoc/publish.md for details.')
+        }
+    }
+}
+
+signing {
+    required { isReleaseVersion && gradle.taskGraph.hasTask(':publish') }
+    sign publishing.publications.mavenJava
 }

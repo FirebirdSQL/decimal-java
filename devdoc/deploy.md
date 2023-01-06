@@ -4,7 +4,7 @@ Deploying
 To deploy to Maven use
 
 ```
-gradlew clean uploadArchives -PcredentialsPassphrase=<credentials password>
+gradlew clean publish -PcredentialsPassphrase=<credentials password>
 ```
 
 Where `<credentials password>` is the password used to add the credentials (see 
