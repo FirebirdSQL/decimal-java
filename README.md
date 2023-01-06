@@ -16,7 +16,7 @@ Get decimal-java from Maven:
 <dependency>
     <groupId>org.firebirdsql</groupId>
     <artifactId>decimal-java</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 </dependency>
 ```
 
