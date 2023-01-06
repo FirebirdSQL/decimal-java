@@ -16,7 +16,7 @@ Get decimal-java from Maven:
 <dependency>
     <groupId>org.firebirdsql</groupId>
     <artifactId>decimal-java</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 </dependency>
 ```
 
@@ -99,7 +99,7 @@ The `valueOf` methods exists for:
 
 - `BigDecimal`
 - `BigInteger`
-  - In addition there is `valueOfExact(BigInteger)` which throws 
+  - In addition, there is `valueOfExact(BigInteger)` which throws 
  `DecimalOverflowException` if the `BigInteger` needs to be rounded to fit the
  target decimal type.
 - `String`
@@ -133,7 +133,7 @@ support needed to be added to [Jaybird](https://github.com/FirebirdSQL/jaybird),
 the Firebird JDBC driver.
 
 As I was unable to find an existing library for this (maybe my Google-fu is
-lacking though), so I created one. As I believe others may have similar needs, I 
+lacking though), I created one. As I believe others may have similar needs, I 
 decided to release it as a separate library.
 
 I have tried to keep this library generically usable, but I'm sure this 
@@ -142,8 +142,7 @@ Pull requests and suggestions for improvements are welcome.
 
 Jaybird does not directly depend on this library, but instead contains a copy to
 reduce the number of dependencies. External dependencies for JDBC drivers are
-an annoyance in non-maven/gradle environments, and Jaybird already has three 
-(although two are optional).
+an annoyance in non-Maven/Gradle environments.
 
 References
 ----------
