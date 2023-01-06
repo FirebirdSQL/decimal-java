@@ -51,6 +51,6 @@ jobs:
           name: doc-artifacts
           path: docs
       - name: Deploy to GitHub pages
-        uses: JamesIves/github-pages-deploy-action@4
+        uses: JamesIves/github-pages-deploy-action@v4.4.1
         with:
           folder: docs
