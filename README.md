@@ -59,7 +59,7 @@ As an alternative, consider using `BigDecimal` with `MathContext.DECIMAL128`,
 Usage
 -----
 
-For full javadoc (of latest build), see https://firebirdsql.github.io/decimal-java/javadoc/
+For full javadoc (of latest tagged release), see https://firebirdsql.github.io/decimal-java/javadoc/
 
 Decoding a 4-byte Decimal32 to a `java.math.BigDecimal`:
 
