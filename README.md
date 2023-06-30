@@ -31,6 +31,10 @@ Status
 
 The API is stable and is not expected to change.
 
+Version 2.0.0 and higher require Java 17 or higher and is modularized with
+module name `org.firebirdsql.decimal`. Version 1.0.2 requires Java 7 or higher,
+and declares the automatic module name `org.firebirdsql.decimal`.
+
 Goals
 -----
 
@@ -44,8 +48,6 @@ Specifically supported are byte representations of:
 - decimal128
 
 Other formats (arbitrary precision decimal) are not planned to be supported.
-
-For the time being, the minimum supported Java version is Java 7.
 
 Non-goals
 ---------
@@ -153,4 +155,4 @@ References
     -   [The decNumber Library](http://speleotrove.com/decimal/decnumber.html)
 -   [Firebird 4.0 Release Notes](https://www.firebirdsql.org/file/documentation/release_notes/html/en/4_0/rlsnotes40.html)
 
- 
+SPDX-License-Identifier: MIT 
