@@ -19,44 +19,43 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 package org.firebirdsql.decimal;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for the examples in README.md.
  *
  * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
  */
-public class ExamplesTest {
+class ExamplesTest {
 
     @Test
-    public void decimal32ParseBytes() {
-        byte[] bytes = {(byte) 0xc7, (byte) 0xf4, (byte) 0xd2, (byte) 0xe7};
+    void decimal32ParseBytes() {
+        byte[] bytes = { (byte) 0xc7, (byte) 0xf4, (byte) 0xd2, (byte) 0xe7 };
         Decimal32 decimal32 = Decimal32.parseBytes(bytes);
         BigDecimal bigDecimal = decimal32.toBigDecimal();
         assertEquals(new BigDecimal("-1.234567E+96"), bigDecimal);
     }
 
     @Test
-    public void decimal32ToBytes() {
+    void decimal32ToBytes() {
         BigDecimal bigDecimal = new BigDecimal("-7.50E-7");
         Decimal32 decimal32 = Decimal32.valueOf(bigDecimal);
         byte[] bytes = decimal32.toBytes();
-        assertArrayEquals(new byte[] {(byte) 0xa1, (byte) 0xc0, 0x03, (byte) 0xd0}, bytes);
+        assertArrayEquals(new byte[] { (byte) 0xa1, (byte) 0xc0, 0x03, (byte) 0xd0 }, bytes);
     }
 
     @Test
-    public void decimal32ToBytes_overflowThrowException() {
+    void decimal32ToBytes_overflowThrowException() {
         BigDecimal bigDecimal = new BigDecimal("-7.50E-7");
         Decimal32 decimal32 = Decimal32.valueOf(bigDecimal, OverflowHandling.THROW_EXCEPTION);
         byte[] bytes = decimal32.toBytes();
-        assertArrayEquals(new byte[] {(byte) 0xa1, (byte) 0xc0, 0x03, (byte) 0xd0}, bytes);
+        assertArrayEquals(new byte[] { (byte) 0xa1, (byte) 0xc0, 0x03, (byte) 0xd0 }, bytes);
     }
 }

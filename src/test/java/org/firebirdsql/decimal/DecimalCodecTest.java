@@ -21,17 +21,14 @@
  */
 package org.firebirdsql.decimal;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
- */
-public class DecimalCodecTest {
+class DecimalCodecTest {
 
     @Test
-    public void testCalculateExponent() {
+    void testCalculateExponent() {
         assertEquals(0b01000001, DecimalCodec.decodeExponent(new byte[] { -1, 0b0100 }, 1, 6));
         assertEquals(0b01000011, DecimalCodec.decodeExponent(new byte[] { -1, 0b1111 }, 1, 6));
         assertEquals(0b01000010, DecimalCodec.decodeExponent(new byte[] { -1, 0b01000 }, 1, 6));

@@ -25,16 +25,36 @@ ext.isReleaseVersion = provider {
     !version.endsWith("SNAPSHOT")
 }
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+dependencies {
+    testImplementation platform(testLibs.junit.bom)
+}
 
 java {
     withJavadocJar()
     withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
-dependencies {
-    testImplementation project.testLibs.junit
+testing {
+    suites {
+        configureEach {
+            useJUnitJupiter()
+            dependencies {
+                implementation.bundle(testLibs.bundles.junit)
+            }
+            targets {
+                configureEach {
+                    testTask.configure {
+                        testLogging {
+                            events "passed", "skipped", "failed"
+                        }
+                        systemProperty 'file.encoding', 'UTF-8'
+                    }
+                }
+            }
+        }
+    }
 }
 
 sourceSets {
@@ -53,10 +73,6 @@ sourceSets {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-}
-
-tasks.withType(Test).configureEach {
-    systemProperty 'file.encoding', 'UTF-8'
 }
 
 tasks.withType(Jar).configureEach {

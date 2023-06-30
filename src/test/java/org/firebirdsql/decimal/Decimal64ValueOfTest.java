@@ -21,16 +21,14 @@
  */
 package org.firebirdsql.decimal;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test for the {@link Decimal64#valueOf(String)} method, the rounding applied, and handling of specials.
@@ -40,30 +38,18 @@ import static org.junit.Assert.assertEquals;
  *
  * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
  */
-@RunWith(Parameterized.class)
-public class Decimal64ValueOfTest {
+class Decimal64ValueOfTest {
 
-    /**
-     * Value to supply to the valueOf method
-     */
-    @Parameterized.Parameter
-    public String sourceValue;
-    /**
-     * Value of the toString() of the resulting value
-     */
-    @Parameterized.Parameter(1)
-    public String expectedValue;
-
-    @Test
-    public void valueOfTest() {
+    @ParameterizedTest(name = "{index}: value {0} (expect {1}))")
+    @MethodSource("data")
+    void valueOfTest(String sourceValue, String expectedValue) {
         Decimal64 value = Decimal64.valueOf(sourceValue);
 
         assertEquals(expectedValue, value.toString());
     }
 
-    @Parameterized.Parameters(name = "{index}: value {0} (expect {1}))")
-    public static Collection<Object[]> data() {
-        return new ArrayList<>(Arrays.asList(
+    static Stream<Arguments> data() {
+        return Stream.of(
                 // Zero
                 testCase("0", "0"),
                 testCase("+0", "0"),
@@ -126,10 +112,10 @@ public class Decimal64ValueOfTest {
                 testCase("-sNaN", "-sNaN"),
                 testCase("-snan", "-sNaN"),
                 testCase("-SNAN", "-sNaN")
-        ));
+        );
     }
 
-    private static Object[] testCase(String source, String result) {
-        return new Object[] { source, result };
+    private static Arguments testCase(String source, String result) {
+        return Arguments.of(source, result);
     }
 }

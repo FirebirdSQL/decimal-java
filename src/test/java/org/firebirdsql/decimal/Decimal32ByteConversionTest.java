@@ -21,53 +21,44 @@
  */
 package org.firebirdsql.decimal;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.stream.Stream;
 
 import static org.firebirdsql.decimal.util.ByteArrayHelper.hexToBytes;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-/**
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
- */
-@RunWith(Parameterized.class)
-public class Decimal32ByteConversionTest {
+class Decimal32ByteConversionTest {
 
-    @Parameterized.Parameter
-    public String description;
-    @Parameterized.Parameter(1)
-    public byte[] sourceBytes;
-    @Parameterized.Parameter(2)
-    public Decimal32 decimalValue;
-    @Parameterized.Parameter(3)
-    public byte[] targetBytes;
-
-    @Test
-    public void testConversionFromBytesToDecimal32() {
-        assumeTrue("No source bytes for " + description, sourceBytes != null);
+    @SuppressWarnings("unused")
+    @ParameterizedTest(name = "{index}: value {0} ({2})")
+    @MethodSource("data")
+    void testConversionFromBytesToDecimal32(String description, byte[] sourceBytes, Decimal32 decimalValue,
+            byte[] targetBytes) {
+        assumeTrue(sourceBytes != null, "No source bytes for " + description);
         Decimal32 result = Decimal32.parseBytes(sourceBytes);
 
-        assertEquals("Expected " + description, decimalValue, result);
+        assertEquals(decimalValue, result, "Expected " + description);
     }
 
-    @Test
-    public void testConversionFromDecimal32ToBytes() {
-        assumeTrue("No target bytes for " + description, targetBytes != null);
+    @SuppressWarnings("unused")
+    @ParameterizedTest(name = "{index}: value {0} ({2})")
+    @MethodSource("data")
+    void testConversionFromDecimal32ToBytes(String description, byte[] sourceBytes, Decimal32 decimalValue,
+            byte[] targetBytes) {
+        assumeTrue(targetBytes != null, "No target bytes for " + description);
         byte[] result = decimalValue.toBytes();
 
         assertArrayEquals(targetBytes, result);
     }
 
-    @Parameterized.Parameters(name = "{index}: value {0} ({2})")
-    public static Collection<Object[]> data() {
-        return Arrays.asList(
+    static Stream<Arguments> data() {
+        return Stream.of(
                 testCase("POSITIVE_INFINITY",
                         new byte[] { 0b0_11110_00, 0, 0, 0 }, Decimal32.POSITIVE_INFINITY),
                 testCase("POSITIVE_INFINITY",
@@ -328,7 +319,7 @@ public class Decimal32ByteConversionTest {
      *         String encoding of the decimal value (compatible with parsing by {@link BigDecimal}
      * @return Test case data
      */
-    private static Object[] testCase(String sourceEncodedString, String decimalString) {
+    private static Arguments testCase(String sourceEncodedString, String decimalString) {
         return testCase(decimalString, hexToBytes(sourceEncodedString), dec(decimalString));
     }
 
@@ -346,7 +337,7 @@ public class Decimal32ByteConversionTest {
      *         Hex string of binary encoding of decimal (target)
      * @return Test case data
      */
-    private static Object[] testCase(String sourceEncodedString, String decimalString, String targetEncodedString) {
+    private static Arguments testCase(String sourceEncodedString, String decimalString, String targetEncodedString) {
         return testCase(decimalString, hexToBytes(sourceEncodedString), dec(decimalString),
                 hexToBytes(targetEncodedString));
     }
@@ -363,7 +354,7 @@ public class Decimal32ByteConversionTest {
      *         Decimal32 value
      * @return Test case data
      */
-    private static Object[] testCase(String description, byte[] sourceBytes, Decimal32 decimal32Value) {
+    private static Arguments testCase(String description, byte[] sourceBytes, Decimal32 decimal32Value) {
         return testCase(description, sourceBytes, decimal32Value, sourceBytes);
     }
 
@@ -381,9 +372,9 @@ public class Decimal32ByteConversionTest {
      *         Binary encoding of decimal (target)
      * @return Test case data
      */
-    private static Object[] testCase(String description, byte[] sourceBytes, Decimal32 decimal32Value,
+    private static Arguments testCase(String description, byte[] sourceBytes, Decimal32 decimal32Value,
             byte[] targetBytes) {
-        return new Object[] { description, sourceBytes, decimal32Value, targetBytes };
+        return Arguments.of(description, sourceBytes, decimal32Value, targetBytes);
     }
 
     private static Decimal32 dec(String decimalString) {

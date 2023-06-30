@@ -21,53 +21,44 @@
  */
 package org.firebirdsql.decimal;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.stream.Stream;
 
 import static org.firebirdsql.decimal.util.ByteArrayHelper.hexToBytes;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-/**
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
- */
-@RunWith(Parameterized.class)
-public class Decimal64ByteConversionTest {
+class Decimal64ByteConversionTest {
 
-    @Parameterized.Parameter
-    public String description;
-    @Parameterized.Parameter(1)
-    public byte[] sourceBytes;
-    @Parameterized.Parameter(2)
-    public Decimal64 decimalValue;
-    @Parameterized.Parameter(3)
-    public byte[] targetBytes;
-
-    @Test
-    public void testConversionFromBytesToDecimal64() {
-        assumeTrue("No source bytes for " + description, sourceBytes != null);
+    @SuppressWarnings("unused")
+    @ParameterizedTest(name = "{index}: value {0} ({2})")
+    @MethodSource("data")
+    void testConversionFromBytesToDecimal64(String description, byte[] sourceBytes, Decimal64 decimalValue,
+            byte[] targetBytes) {
+        assumeTrue(sourceBytes != null, "No source bytes for " + description);
         Decimal64 result = Decimal64.parseBytes(sourceBytes);
 
-        assertEquals("Expected " + description, decimalValue, result);
+        assertEquals(decimalValue, result, "Expected " + description);
     }
 
-    @Test
-    public void testConversionFromDecimal64ToBytes() {
-        assumeTrue("No target bytes for " + description, targetBytes != null);
+    @SuppressWarnings("unused")
+    @ParameterizedTest(name = "{index}: value {0} ({2})")
+    @MethodSource("data")
+    void testConversionFromDecimal64ToBytes(String description, byte[] sourceBytes, Decimal64 decimalValue,
+            byte[] targetBytes) {
+        assumeTrue(targetBytes != null, "No target bytes for " + description);
         byte[] result = decimalValue.toBytes();
 
         assertArrayEquals(targetBytes, result);
     }
 
-    @Parameterized.Parameters(name = "{index}: value {0} ({2})")
-    public static Collection<Object[]> data() {
-        return Arrays.asList(
+    static Stream<Arguments> data() {
+        return Stream.of(
                 testCase("POSITIVE_INFINITY",
                         new byte[] { 0b0_11110_00, 0, 0, 0, 0, 0, 0, 0 }, Decimal64.POSITIVE_INFINITY),
                 testCase("POSITIVE_INFINITY",
@@ -434,7 +425,7 @@ public class Decimal64ByteConversionTest {
      *         String encoding of the decimal value (compatible with parsing by {@link BigDecimal}
      * @return Test case data
      */
-    private static Object[] testCase(String sourceEncodedString, String decimalString) {
+    private static Arguments testCase(String sourceEncodedString, String decimalString) {
         return testCase(decimalString, hexToBytes(sourceEncodedString), dec(decimalString));
     }
 
@@ -452,7 +443,7 @@ public class Decimal64ByteConversionTest {
      *         Hex string of binary encoding of decimal (target)
      * @return Test case data
      */
-    private static Object[] testCase(String sourceEncodedString, String decimalString, String targetEncodedString) {
+    private static Arguments testCase(String sourceEncodedString, String decimalString, String targetEncodedString) {
         return testCase(decimalString, hexToBytes(sourceEncodedString), dec(decimalString),
                 hexToBytes(targetEncodedString));
     }
@@ -469,7 +460,7 @@ public class Decimal64ByteConversionTest {
      *         Decimal64 value
      * @return Test case data
      */
-    private static Object[] testCase(String description, byte[] sourceBytes, Decimal64 decimal64Value) {
+    private static Arguments testCase(String description, byte[] sourceBytes, Decimal64 decimal64Value) {
         return testCase(description, sourceBytes, decimal64Value, sourceBytes);
     }
 
@@ -487,9 +478,9 @@ public class Decimal64ByteConversionTest {
      *         Binary encoding of decimal (target)
      * @return Test case data
      */
-    private static Object[] testCase(String description, byte[] sourceBytes, Decimal64 decimal64Value,
+    private static Arguments testCase(String description, byte[] sourceBytes, Decimal64 decimal64Value,
             byte[] targetBytes) {
-        return new Object[] { description, sourceBytes, decimal64Value, targetBytes };
+        return Arguments.of(description, sourceBytes, decimal64Value, targetBytes);
     }
 
     private static Decimal64 dec(String decimalString) {

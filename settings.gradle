@@ -7,9 +7,12 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         testLibs {
-            version('junit', '4.13.1')
+            version('junit', '5.9.3')
 
-            library('junit', 'junit', 'junit').versionRef('junit')
+            library('junit-bom', 'org.junit', 'junit-bom').versionRef('junit')
+            library('junit-jupiter', 'org.junit.jupiter', 'junit-jupiter').withoutVersion()
+
+            bundle('junit', ['junit-jupiter'])
         }
     }
 }
