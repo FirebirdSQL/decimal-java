@@ -33,7 +33,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @author Mark Rotteveel
  */
-public abstract class Decimal<T extends Decimal<T>> {
+public abstract sealed class Decimal<T extends Decimal<T>> permits Decimal32, Decimal64, Decimal128 {
 
     private final int signum;
     private final DecimalType type;
