@@ -1,1 +1,1 @@
-packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"org.firebirdsql.decimal"}];updateSearchResults();
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"m":"org.firebirdsql.decimal","l":"org.firebirdsql.decimal"}];updateSearchResults();

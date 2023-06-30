@@ -1,1 +1,1 @@
-moduleSearchIndex = [];updateSearchResults();
+moduleSearchIndex = [{"l":"org.firebirdsql.decimal"}];updateSearchResults();
