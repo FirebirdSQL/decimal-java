@@ -60,7 +60,7 @@ public enum DecimalType {
     private static final int NAN_SIGNAL = 0b0_11111_10;
 
     /**
-     * @return Bit combination of this special.
+     * @return Bit-combination of this special.
      * @throws IllegalStateException
      *         If this is type FINITE instead
      */
