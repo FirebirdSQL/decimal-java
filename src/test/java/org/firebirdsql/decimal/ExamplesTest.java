@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Tests for the examples in README.md.
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class ExamplesTest {
 

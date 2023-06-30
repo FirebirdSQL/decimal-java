@@ -26,7 +26,7 @@ import static org.firebirdsql.decimal.generator.LookupConstants.DPD2BIN;
 /**
  * Generates a lookup table from DPD encoding of three digits to those three digits as characters.
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public class GenerateLookupTable {
 

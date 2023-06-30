@@ -26,7 +26,7 @@ import static org.firebirdsql.decimal.generator.LookupConstants.DPD2BIN;
 /**
  * Generates a lookup of DPD encoding of 3 digits in reverse order (unused for actual code).
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public class GenerateReverseLookupTable {
 

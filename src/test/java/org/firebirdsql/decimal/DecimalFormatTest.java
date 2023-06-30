@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Test to check if the decimal constants match the specification.
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class DecimalFormatTest {
 

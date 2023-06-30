@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Indirectly also tests {@link Decimal64#valueOf(BigDecimal)} and {@link Decimal64#toString()}.
  * </p>
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class Decimal64ValueOfTest {
 

@@ -24,7 +24,7 @@ package org.firebirdsql.decimal;
 /**
  * Type of decimal.
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public enum DecimalType {
 
