@@ -1,2 +1,16 @@
 rootProject.name = 'decimal-java'
 
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+    }
+
+    versionCatalogs {
+        testLibs {
+            version('junit', '4.13.1')
+
+            library('junit', 'junit', 'junit').versionRef('junit')
+        }
+    }
+}
+

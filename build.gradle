@@ -1,3 +1,5 @@
+import java.time.Year
+
 /*
   Gradle build script for decimal-java.
 
@@ -14,7 +16,7 @@ plugins {
 }
 
 group 'org.firebirdsql'
-version '1.0.3-SNAPSHOT'
+version '2.0.0-SNAPSHOT'
 
 ext.'signing.password' = credentials.forKey('signing.password')
 ext.ossrhPassword = credentials.forKey('ossrhPassword')
@@ -23,12 +25,8 @@ ext.isReleaseVersion = provider {
     !version.endsWith("SNAPSHOT")
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_7
-targetCompatibility = JavaVersion.VERSION_1_7
-
-repositories {
-    mavenCentral()
-}
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 java {
     withJavadocJar()
@@ -36,7 +34,7 @@ java {
 }
 
 dependencies {
-    testImplementation 'junit:junit:4.13.1'
+    testImplementation project.testLibs.junit
 }
 
 sourceSets {
@@ -53,7 +51,29 @@ sourceSets {
     }
 }
 
-jar {
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+    systemProperty 'file.encoding', 'UTF-8'
+}
+
+tasks.withType(Jar).configureEach {
+    // General manifest info
+    manifest {
+        def buildYear = Year.now().toString()
+        attributes(
+                'Created-By': "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
+                'Bundle-License': 'MIT',
+                'SPDX-License-Identifier': 'MIT',
+                'SPDX-FileCopyrightText': "2017-$buildYear Firebird development team and individual contributors"
+        )
+    }
+}
+
+tasks.named("jar", Jar) {
+    // Info specific to main jar
     manifest {
         attributes(
                 'Implementation-Title': project.name,
@@ -63,15 +83,13 @@ jar {
     }
 }
 
-javadoc {
+tasks.named('javadoc', Javadoc).configure {
     options.author()
     options.windowTitle = "decimal-java API"
     options.docTitle = 'decimal-java'
-    options.bottom = "Copyright &copy; 2017-${new Date().format("yyyy")} Jaybird (Firebird JDBC) team. All rights reserved."
-    if(JavaVersion.current().isJava9Compatible()) {
-        options.addBooleanOption('html5', true)
-        options.addBooleanOption('Xdoclint:none', true)
-    }
+    options.bottom = "Copyright &copy; 2017-${new Date().format("yyyy")} Firebird development team and individual contributors. All rights reserved."
+    options.addBooleanOption('html5', true)
+    options.addBooleanOption('Xdoclint:none', true)
 }
 
 publishing {
