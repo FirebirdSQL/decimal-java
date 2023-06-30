@@ -16,7 +16,7 @@ plugins {
 }
 
 group 'org.firebirdsql'
-version '2.0.0'
+version '2.0.1-SNAPSHOT'
 
 ext.'signing.password' = credentials.forKey('signing.password')
 ext.ossrhPassword = credentials.forKey('ossrhPassword')
