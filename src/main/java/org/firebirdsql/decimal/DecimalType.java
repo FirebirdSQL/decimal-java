@@ -83,21 +83,15 @@ public enum DecimalType {
      */
     static DecimalType fromFirstByte(int firstByte) {
         final int type = firstByte & TYPE_MASK;
-        switch (type) {
-        case INFINITY_0:
-        case INFINITY_2:
-            return INFINITY;
-
-        case NAN_QUIET:
-            return NAN;
-
-        case NAN_SIGNAL:
-            return SIGNALING_NAN;
-
-        default:
-            assert (firstByte & 0b0_11110_00) != 0b0_11110_00 : "Invalid special " + firstByte;
-            return FINITE;
-        }
+        return switch (type) {
+            case INFINITY_0, INFINITY_2 -> INFINITY;
+            case NAN_QUIET -> NAN;
+            case NAN_SIGNAL -> SIGNALING_NAN;
+            default -> {
+                assert (firstByte & 0b0_11110_00) != 0b0_11110_00 : "Invalid special " + firstByte;
+                yield FINITE;
+            }
+        };
     }
 
 }
