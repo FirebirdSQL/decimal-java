@@ -18,14 +18,14 @@ a `<homedir>/.gradle/gradle.properties` with the following properties:
 signing.keyId=<gpg key id>
 signing.secretKeyRingFile=<path to your secring.gpg> 
 
-ossrhUsername=<sonatype OSSRH username>
+centralUsername=<Central Portal usertoken name>
 ```
 
 In addition, you need to set the following credentials
 
 ```
 ./gradlew addCredentials --key signing.password --value <your secret key password> -PcredentialsPassphrase=<credentials password> 
-./gradlew addCredentials --key ossrhPassword --value <your sonatyp OSSRH password> -PcredentialsPassphrase=<credentials password> 
+./gradlew addCredentials --key centralPassword --value <your Central Portal usertoken password> -PcredentialsPassphrase=<credentials password> 
 ```
 
 See https://github.com/etiennestuder/gradle-credentials-plugin for details on
