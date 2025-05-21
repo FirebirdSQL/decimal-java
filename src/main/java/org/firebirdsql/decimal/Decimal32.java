@@ -235,7 +235,7 @@ public final class Decimal32 extends Decimal<Decimal32> {
     /**
      * Creates a {@code Decimal32} from {@code value}, applying rounding where necessary.
      * <p>
-     * Except for the special values [+/-]Inf, [+/-]Infinity, [+/-]NaN and [+/-]sNaN (case insensitive), the rules
+     * Except for the special values [+/-]Inf, [+/-]Infinity, [+/-]NaN and [+/-]sNaN (case-insensitive), the rules
      * of {@link BigDecimal#BigDecimal(String)} apply, with special handling in place to discern between positive
      * and negative zero.
      * </p>
@@ -256,7 +256,7 @@ public final class Decimal32 extends Decimal<Decimal32> {
     /**
      * Creates a {@code Decimal32} from {@code value}, applying rounding where necessary.
      * <p>
-     * Except for the special values [+/-]Inf, [+/-]Infinity, [+/-]NaN and [+/-]sNaN (case insensitive), the rules
+     * Except for the special values [+/-]Inf, [+/-]Infinity, [+/-]NaN and [+/-]sNaN (case-insensitive), the rules
      * of {@link BigDecimal#BigDecimal(String)} apply, with special handling in place to discern between positive
      * and negative zero.
      * </p>

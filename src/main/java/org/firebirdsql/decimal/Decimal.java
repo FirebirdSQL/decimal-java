@@ -390,7 +390,7 @@ public abstract sealed class Decimal<T extends Decimal<T>> permits Decimal32, De
         /**
          * Creates a decimal from {@code value}, applying rounding where necessary.
          * <p>
-         * Except for the special values [+/-]Inf, [+/-]Infinity, [+/-]NaN and [+/-]sNaN (case insensitive), the rules
+         * Except for the special values [+/-]Inf, [+/-]Infinity, [+/-]NaN and [+/-]sNaN (case-insensitive), the rules
          * of {@link BigDecimal#BigDecimal(String)} apply, with special handling in place to discern between positive
          * and negative zero.
          * </p>
