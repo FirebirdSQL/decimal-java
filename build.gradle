@@ -15,8 +15,8 @@ plugins {
     id 'signing'
 }
 
-group 'org.firebirdsql'
-version '2.0.1-SNAPSHOT'
+group = 'org.firebirdsql'
+version = '2.0.1-SNAPSHOT'
 
 ext.'signing.password' = credentials.forKey('signing.password')
 ext.centralPassword = credentials.forKey('centralPassword')
@@ -175,6 +175,6 @@ tasks.withType(PublishToMavenRepository).each {
 }
 
 signing {
-    required { isReleaseVersion && gradle.taskGraph.hasTask(':publish') }
+    required = { isReleaseVersion && gradle.taskGraph.hasTask(':publish') }
     sign publishing.publications.mavenJava
 }
