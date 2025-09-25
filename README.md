@@ -5,7 +5,7 @@ Decimal-java is a library to convert `java.math.BigDecimal` to and from
 IEEE-754r (IEEE-754-2008) decimal byte representations.
 
 [![Java CI with Gradle](https://github.com/FirebirdSQL/decimal-java/actions/workflows/gradle.yml/badge.svg?branch=master)](https://github.com/FirebirdSQL/decimal-java/actions/workflows/gradle.yml?query=branch%3Amaster)
-[![MavenCentral](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql/decimal-java/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql/decimal-java/)
+[![MavenCentral](https://maven-badges.sml.io/sonatype-central/org.firebirdsql/decimal-java/badge.svg)](https://maven-badges.sml.io/sonatype-central/org.firebirdsql/decimal-java/)
 
 Maven
 -----
