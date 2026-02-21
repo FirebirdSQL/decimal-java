@@ -111,6 +111,7 @@ public class LookupConstants {
             998,  999 };
 
     // from ICU decNumber decDPD.h
+    @SuppressWarnings("unused")
     static final int[] BIN2DPD = {    0,    1,    2,    3,    4,    5,    6,    7,
             8,    9,   16,   17,   18,   19,   20,   21,   22,   23,   24,   25,   32,
             33,   34,   35,   36,   37,   38,   39,   40,   41,   48,   49,   50,   51,

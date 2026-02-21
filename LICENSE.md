@@ -1,4 +1,4 @@
-Copyright (c) 2017 - 2023 Firebird development team and individual contributors
+Copyright (c) 2017 - 2026 Firebird development team and individual contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

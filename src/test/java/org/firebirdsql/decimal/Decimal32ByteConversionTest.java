@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2023 Firebird development team and individual contributors
+ * Copyright (c) 2018-2026 Firebird development team and individual contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@
  */
 package org.firebirdsql.decimal;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -38,8 +39,8 @@ class Decimal32ByteConversionTest {
     @SuppressWarnings("unused")
     @ParameterizedTest(name = "{index}: value {0} ({2})")
     @MethodSource("data")
-    void testConversionFromBytesToDecimal32(String description, byte[] sourceBytes, Decimal32 decimalValue,
-            byte[] targetBytes) {
+    void testConversionFromBytesToDecimal32(String description, byte @Nullable [] sourceBytes, Decimal32 decimalValue,
+            byte @Nullable [] targetBytes) {
         assumeTrue(sourceBytes != null, "No source bytes for " + description);
         Decimal32 result = Decimal32.parseBytes(sourceBytes);
 
@@ -49,8 +50,8 @@ class Decimal32ByteConversionTest {
     @SuppressWarnings("unused")
     @ParameterizedTest(name = "{index}: value {0} ({2})")
     @MethodSource("data")
-    void testConversionFromDecimal32ToBytes(String description, byte[] sourceBytes, Decimal32 decimalValue,
-            byte[] targetBytes) {
+    void testConversionFromDecimal32ToBytes(String description, byte @Nullable [] sourceBytes, Decimal32 decimalValue,
+            byte @Nullable [] targetBytes) {
         assumeTrue(targetBytes != null, "No target bytes for " + description);
         byte[] result = decimalValue.toBytes();
 
@@ -337,7 +338,8 @@ class Decimal32ByteConversionTest {
      *         Hex string of binary encoding of decimal (target)
      * @return Test case data
      */
-    private static Arguments testCase(String sourceEncodedString, String decimalString, String targetEncodedString) {
+    private static Arguments testCase(@Nullable String sourceEncodedString, String decimalString,
+            @Nullable String targetEncodedString) {
         return testCase(decimalString, hexToBytes(sourceEncodedString), dec(decimalString),
                 hexToBytes(targetEncodedString));
     }
@@ -354,7 +356,7 @@ class Decimal32ByteConversionTest {
      *         Decimal32 value
      * @return Test case data
      */
-    private static Arguments testCase(String description, byte[] sourceBytes, Decimal32 decimal32Value) {
+    private static Arguments testCase(String description, byte @Nullable [] sourceBytes, Decimal32 decimal32Value) {
         return testCase(description, sourceBytes, decimal32Value, sourceBytes);
     }
 
@@ -372,8 +374,8 @@ class Decimal32ByteConversionTest {
      *         Binary encoding of decimal (target)
      * @return Test case data
      */
-    private static Arguments testCase(String description, byte[] sourceBytes, Decimal32 decimal32Value,
-            byte[] targetBytes) {
+    private static Arguments testCase(String description, byte @Nullable [] sourceBytes, Decimal32 decimal32Value,
+            byte @Nullable [] targetBytes) {
         return Arguments.of(description, sourceBytes, decimal32Value, targetBytes);
     }
 

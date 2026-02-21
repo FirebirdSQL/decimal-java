@@ -19,35 +19,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.firebirdsql.decimal.util;
-
-import org.jspecify.annotations.Nullable;
-
-import java.util.HexFormat;
-
 /**
- * Helper methods for byte arrays.
- *
- * @author Mark Rotteveel
+ * Decimal-java is a library to convert {@link java.math.BigDecimal} to and from IEEE-754r (IEEE-754-2008) decimal byte
+ * representations.
+ * <p>
+ * For more information, consult the project's README on
+ * <a href="https://github.com/FirebirdSQL/decimal-java">https://github.com/FirebirdSQL/decimal-java</a>.
+ * </p>
  */
-public final class ByteArrayHelper {
+@NullMarked
+package org.firebirdsql.decimal;
 
-    private ByteArrayHelper() {
-        // no instances
-    }
-
-    /**
-     * Converts a hexadecimal string to a byte array.
-     *
-     * @param hexString
-     *         Hexadecimal string or {@code null}
-     * @return byte array, or {@code null} if {@code hexString} is {@code null}
-     */
-    public static byte @Nullable [] hexToBytes(@Nullable String hexString) {
-        if (hexString == null) {
-            return null;
-        }
-        return HexFormat.of().parseHex(hexString);
-    }
-
-}
+import org.jspecify.annotations.NullMarked;

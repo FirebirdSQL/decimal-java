@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2023 Firebird development team and individual contributors
+ * Copyright (c) 2018-2026 Firebird development team and individual contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,12 +40,13 @@ public abstract sealed class Decimal<T extends Decimal<T>> permits Decimal32, De
     private final BigDecimal bigDecimal;
 
     Decimal(int signum, DecimalType type) {
+        //noinspection ConstantValue
         assert type != null : "Type should not be null";
         assert type != DecimalType.FINITE : "Constructor only suitable for non-FINITE";
         assert -1 == signum || signum == 1 : "Invalid signum, " + signum;
         this.signum = signum;
         this.type = type;
-        bigDecimal = null;
+        bigDecimal = BigDecimal.ZERO;
     }
 
     Decimal(int signum, BigDecimal bigDecimal) {
@@ -197,7 +198,7 @@ public abstract sealed class Decimal<T extends Decimal<T>> permits Decimal32, De
         return switch (type) {
             case FINITE -> {
                 if (signum == Signum.NEGATIVE && isEquivalentToZero()) {
-                    yield "-" + bigDecimal.toString();
+                    yield "-" + bigDecimal;
                 }
                 yield bigDecimal.toString();
             }
@@ -223,7 +224,7 @@ public abstract sealed class Decimal<T extends Decimal<T>> permits Decimal32, De
     public final int hashCode() {
         int result = signum;
         result = 31 * result + type.hashCode();
-        result = 31 * result + (bigDecimal != null ? bigDecimal.hashCode() : 0);
+        result = 31 * result + bigDecimal.hashCode();
         return result;
     }
 

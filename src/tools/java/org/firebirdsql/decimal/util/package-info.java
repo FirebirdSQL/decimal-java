@@ -19,35 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+@NullMarked
 package org.firebirdsql.decimal.util;
 
-import org.jspecify.annotations.Nullable;
-
-import java.util.HexFormat;
-
-/**
- * Helper methods for byte arrays.
- *
- * @author Mark Rotteveel
- */
-public final class ByteArrayHelper {
-
-    private ByteArrayHelper() {
-        // no instances
-    }
-
-    /**
-     * Converts a hexadecimal string to a byte array.
-     *
-     * @param hexString
-     *         Hexadecimal string or {@code null}
-     * @return byte array, or {@code null} if {@code hexString} is {@code null}
-     */
-    public static byte @Nullable [] hexToBytes(@Nullable String hexString) {
-        if (hexString == null) {
-            return null;
-        }
-        return HexFormat.of().parseHex(hexString);
-    }
-
-}
+import org.jspecify.annotations.NullMarked;
