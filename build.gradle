@@ -26,7 +26,7 @@ ext.isReleaseVersion = provider {
 }
 
 dependencies {
-    testImplementation platform(testLibs.junit.bom)
+    testImplementation(platform(libs.junit.bom))
 }
 
 java {
@@ -41,7 +41,7 @@ testing {
         configureEach {
             useJUnitJupiter()
             dependencies {
-                implementation.bundle(testLibs.bundles.junit)
+                implementation.bundle(libs.bundles.junit)
             }
             targets {
                 configureEach {

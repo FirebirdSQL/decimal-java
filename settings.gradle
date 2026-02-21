@@ -4,16 +4,5 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
     }
-
-    versionCatalogs {
-        testLibs {
-            version('junit', '6.0.3')
-
-            library('junit-bom', 'org.junit', 'junit-bom').versionRef('junit')
-            library('junit-jupiter', 'org.junit.jupiter', 'junit-jupiter').withoutVersion()
-
-            bundle('junit', ['junit-jupiter'])
-        }
-    }
 }
 
