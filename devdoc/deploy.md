@@ -10,6 +10,12 @@ gradlew clean publish -PcredentialsPassphrase=<credentials password>
 Where `<credentials password>` is the password used to add the credentials (see 
 also below).
 
+Publishing to Maven Central (non-SNAPSHOT releases) requires the following
+additional steps:
+
+1. Promote the published artifacts to Central Portal through the SwaggerUI <https://ossrh-staging-api.central.sonatype.com/swagger-ui/>
+2. An explicit close through <https://central.sonatype.com/publishing/deployments>.
+
 To be able to deploy, you need the following:
 
 a `<homedir>/.gradle/gradle.properties` with the following properties:
